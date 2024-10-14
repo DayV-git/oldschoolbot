@@ -147,6 +147,7 @@ export interface MonsterActivityTaskOptions extends ActivityTaskOptions {
 	hasWildySupplies?: boolean;
 	isInWilderness?: boolean;
 	attackStyles?: AttackStyles[];
+	destroyLoot?: boolean;
 }
 
 export interface ClueActivityTaskOptions extends ActivityTaskOptions {

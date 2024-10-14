@@ -1,7 +1,7 @@
 import type { ChatInputCommandInteraction, InteractionReplyOptions } from 'discord.js';
 
 import { colosseumCommand } from '../../../../lib/colosseum';
-import type { PvMMethod } from '../../../../lib/constants';
+import type { PvMMethod, PvMModifier } from '../../../../lib/constants';
 import { getCurrentPeak } from '../../../../lib/getCurrentPeak';
 import { trackLoot } from '../../../../lib/lootTrack';
 import { revenantMonsters } from '../../../../lib/minions/data/killableMonsters/revs';
@@ -30,8 +30,8 @@ export async function minionKillCommand(
 	name: string,
 	inputQuantity: number | undefined,
 	method: PvMMethod | undefined,
-	wilderness: boolean | undefined,
-	solo: boolean | undefined
+	modifier: PvMModifier | undefined,
+	wilderness: boolean | undefined
 ): Promise<string | InteractionReplyOptions> {
 	if (user.minionIsBusy) {
 		return 'Your minion is busy.';
@@ -41,7 +41,7 @@ export async function minionKillCommand(
 	if (!name) return invalidMonsterMsg;
 
 	if (stringMatches(name, 'colosseum')) return colosseumCommand(user, channelID);
-	if (stringMatches(name, 'nex')) return nexCommand(interaction, user, channelID, solo);
+	if (stringMatches(name, 'nex')) return nexCommand(interaction, user, channelID, modifier? modifier == 'Nex: solo': false);
 	if (stringMatches(name, 'zalcano')) return zalcanoCommand(user, channelID, inputQuantity);
 	if (stringMatches(name, 'tempoross')) return temporossCommand(user, channelID, inputQuantity);
 	if (name.toLowerCase().includes('nightmare')) return nightmareCommand(user, channelID, name, inputQuantity);
@@ -73,6 +73,7 @@ export async function minionKillCommand(
 		isTryingToUseWildy: wilderness ?? false,
 		monsterKC: await user.getKC(monster.id),
 		inputPVMMethod: method,
+		inputPVMModifier: modifier,
 		maxTripLength: calcMaxTripLength(user, 'MonsterKilling'),
 		pkEvasionExperience: stats.pk_evasion_exp,
 		poh: await getPOH(user.id),
@@ -128,7 +129,8 @@ export async function minionKillCommand(
 		bob: !bob ? undefined : bob,
 		hasWildySupplies,
 		isInWilderness: result.isInWilderness,
-		attackStyles: result.attackStyles
+		attackStyles: result.attackStyles,
+		destroyLoot: result.destroyLoot
 	});
 	let response = `${minionName} is now killing ${result.quantity}x ${monster.name}, it'll take around ${formatDuration(
 		result.duration

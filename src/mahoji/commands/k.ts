@@ -1,8 +1,8 @@
 import type { CommandRunOptions } from '@oldschoolgg/toolkit/util';
 import { ApplicationCommandOptionType } from 'discord.js';
 
-import type { PvMMethod } from '../../lib/constants';
-import { NEX_ID, PVM_METHODS, ZALCANO_ID } from '../../lib/constants';
+import type { PvMMethod, PvMModifier } from '../../lib/constants';
+import { NEX_ID, PVM_METHODS, PVM_MODIFIERS, ZALCANO_ID } from '../../lib/constants';
 import killableMonsters from '../../lib/minions/data/killableMonsters';
 
 import { minionKillCommand } from '../lib/abstracted_commands/minionKill/minionKill';
@@ -111,6 +111,13 @@ export const minionKCommand: OSBMahojiCommand = {
 			choices: PVM_METHODS.map(i => ({ name: i, value: i }))
 		},
 		{
+			type: ApplicationCommandOptionType.String,
+			name: 'modifier',
+			description: 'Modifier for certain monsters',
+			required: false,
+			choices: PVM_MODIFIERS.map(i => ({ name: i, value: i }))
+		},
+		{
 			type: ApplicationCommandOptionType.Boolean,
 			name: 'show_info',
 			description: 'Show information on this monster.',
@@ -122,12 +129,12 @@ export const minionKCommand: OSBMahojiCommand = {
 			description: 'If you want to kill the monster in the wilderness.',
 			required: false
 		},
-		{
-			type: ApplicationCommandOptionType.Boolean,
-			name: 'solo',
-			description: 'Solo (if its a group boss)',
-			required: false
-		}
+		// {
+		// 	type: ApplicationCommandOptionType.Boolean,
+		// 	name: 'solo',
+		// 	description: 'Solo (if its a group boss)',
+		// 	required: false
+		// }
 	],
 	run: async ({
 		options,
@@ -140,7 +147,7 @@ export const minionKCommand: OSBMahojiCommand = {
 		method?: PvMMethod;
 		show_info?: boolean;
 		wilderness?: boolean;
-		solo?: boolean;
+		modifier?: PvMModifier;
 	}>) => {
 		const user = await mUserFetch(userID);
 		if (options.show_info) {
@@ -153,8 +160,8 @@ export const minionKCommand: OSBMahojiCommand = {
 			options.name,
 			options.quantity,
 			options.method,
+			options.modifier,
 			options.wilderness,
-			options.solo
 		);
 	}
 };

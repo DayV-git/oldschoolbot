@@ -125,6 +125,7 @@ interface newOptions {
 	pkEncounters?: number;
 	hasWildySupplies?: boolean;
 	isInWilderness?: boolean;
+	destroyLoot?: boolean;
 	duration: number;
 	hasEliteCA: boolean;
 	hasKourendHard: boolean;
@@ -162,7 +163,8 @@ export function doMonsterTrip(data: newOptions) {
 		userStats,
 		attackStyles,
 		duration,
-		bitfield
+		bitfield,
+		destroyLoot
 	} = data;
 	const currentKC = kcBank.amount(monster.id);
 	const updateBank = new UpdateBank();
@@ -295,6 +297,7 @@ export function doMonsterTrip(data: newOptions) {
 
 	const killOptions: MonsterKillOptions = {
 		onSlayerTask: slayerContext.isOnTask,
+		destroyLoot: destroyLoot,
 		slayerMaster: slayerContext.isOnTask ? slayerContext.slayerMaster.osjsEnum : undefined,
 		hasSuperiors: superiorTable,
 		inCatacombs: isInCatacombs,

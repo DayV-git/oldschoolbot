@@ -3,7 +3,7 @@ import { clamp, increaseNumByPercent, reduceNumByPercent } from 'e';
 import { Monsters } from 'oldschooljs';
 import { mergeDeep } from 'remeda';
 import z from 'zod';
-import type { BitField, PvMMethod } from '../../../../lib/constants';
+import type { BitField, PvMMethod, PvMModifier } from '../../../../lib/constants';
 import { getSimilarItems } from '../../../../lib/data/similarItems';
 import { type CombatOptionsEnum, SlayerActivityConstants } from '../../../../lib/minions/data/combatConstants';
 import { revenantMonsters } from '../../../../lib/minions/data/killableMonsters/revs';
@@ -36,6 +36,7 @@ const newMinionKillReturnSchema = z.object({
 	duration: z.number().int().positive(),
 	quantity: z.number().int().positive(),
 	isOnTask: z.boolean(),
+	destroyLoot: z.boolean(),
 	isInWilderness: z.boolean(),
 	attackStyles: z.array(z.enum(zodEnum(attackStylesArr))),
 	currentTaskOptions: z.object({
@@ -63,6 +64,7 @@ export interface MinionKillOptions {
 	isTryingToUseWildy: boolean;
 	combatOptions: readonly CombatOptionsEnum[];
 	inputPVMMethod: PvMMethod | undefined;
+	inputPVMModifier: PvMModifier | undefined;
 	monsterKC: number;
 	poh: PlayerOwnedHouse;
 	maxTripLength: number;
@@ -83,11 +85,15 @@ export function newMinionKillCommand(args: MinionKillOptions) {
 		monster,
 		isTryingToUseWildy,
 		inputPVMMethod,
+		inputPVMModifier,
 		maxTripLength,
 		slayerUnlocks
 	} = args;
 	const osjsMon = Monsters.get(monster.id)!;
 	let { primaryStyle, relevantGearStat } = getAttackStylesContext(attackStyles);
+
+	const destroyLoot = (monster.id === Monsters.Araxxor.id) && inputPVMModifier == 'Araxxor: destroy loot';
+
 	const isOnTask =
 		currentSlayerTask.assignedTask !== null &&
 		currentSlayerTask.currentTask !== null &&
@@ -271,6 +277,7 @@ export function newMinionKillCommand(args: MinionKillOptions) {
 		duration,
 		quantity,
 		isOnTask,
+		destroyLoot,
 		isInWilderness,
 		attackStyles,
 		currentTaskOptions: speedDurationResult.currentTaskOptions,
