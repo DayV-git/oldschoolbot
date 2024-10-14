@@ -439,7 +439,7 @@ const tripHandlers = {
 			return {
 				name: 'nex',
 				quantity: data.quantity,
-				solo: data.userDetails.length === 1
+				modifier: data.userDetails.length === 1? 'Nex: solo': 'none'
 			};
 		}
 	},
