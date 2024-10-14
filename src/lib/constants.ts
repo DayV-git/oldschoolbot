@@ -436,7 +436,7 @@ export const DISABLED_COMMANDS = new Set<string>();
 export const PVM_METHODS = ['barrage', 'cannon', 'burst', 'chinning', 'none'] as const;
 export type PvMMethod = (typeof PVM_METHODS)[number];
 
-export const PVM_MODIFIERS = ['Nex: solo', 'Araxxor: destroy loot'] as const;
+export const PVM_MODIFIERS = ['Nex: solo', 'Araxxor: destroy loot', 'none'] as const;
 export type PvMModifier = (typeof PVM_MODIFIERS)[number];
 
 export const NMZ_STRATEGY = ['experience', 'points'] as const;

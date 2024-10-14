@@ -129,12 +129,6 @@ export const minionKCommand: OSBMahojiCommand = {
 			description: 'If you want to kill the monster in the wilderness.',
 			required: false
 		},
-		// {
-		// 	type: ApplicationCommandOptionType.Boolean,
-		// 	name: 'solo',
-		// 	description: 'Solo (if its a group boss)',
-		// 	required: false
-		// }
 	],
 	run: async ({
 		options,

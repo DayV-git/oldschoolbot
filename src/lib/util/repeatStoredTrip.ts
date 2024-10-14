@@ -423,10 +423,12 @@ const tripHandlers = {
 			if (data.chinning) method = 'chinning';
 			else if (data.bob === SlayerActivityConstants.IceBarrage) method = 'barrage';
 			else if (data.bob === SlayerActivityConstants.IceBurst) method = 'burst';
+
 			return {
 				name: autocompleteMonsters.find(i => i.id === data.mi)?.name ?? data.mi.toString(),
 				quantity: data.iQty,
 				method,
+				modifier: data.modifier,
 				wilderness: data.isInWilderness
 			};
 		}

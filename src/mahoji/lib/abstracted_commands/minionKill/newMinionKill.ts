@@ -269,6 +269,10 @@ export function newMinionKillCommand(args: MinionKillOptions) {
 	speedDurationResult.updateBank.itemCostBank.freeze();
 	speedDurationResult.updateBank.itemLootBank.freeze();
 
+	if (destroyLoot) {
+		speedDurationResult.messages.push(`Reduced loot as destroying Araxxor's corpse`);
+	}
+
 	if (speedDurationResult.updateBank.itemCostBank.length > 0) {
 		speedDurationResult.messages.push(`Removing items: ${speedDurationResult.updateBank.itemCostBank}`);
 	}

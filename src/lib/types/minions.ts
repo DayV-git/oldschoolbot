@@ -1,7 +1,7 @@
 import type { CropUpgradeType } from '@prisma/client';
 
 import type { ItemBank } from '.';
-import type { NMZStrategy, TwitcherGloves, UnderwaterAgilityThievingTrainingSkill } from '../constants';
+import type { NMZStrategy, PvMModifier, TwitcherGloves, UnderwaterAgilityThievingTrainingSkill } from '../constants';
 import type { SlayerActivityConstants } from '../minions/data/combatConstants';
 import type { IPatchData } from '../minions/farming/types';
 import type { AttackStyles } from '../minions/functions';
@@ -147,7 +147,7 @@ export interface MonsterActivityTaskOptions extends ActivityTaskOptions {
 	hasWildySupplies?: boolean;
 	isInWilderness?: boolean;
 	attackStyles?: AttackStyles[];
-	destroyLoot?: boolean;
+	modifier?: PvMModifier;
 }
 
 export interface ClueActivityTaskOptions extends ActivityTaskOptions {
