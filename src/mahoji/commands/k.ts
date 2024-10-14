@@ -128,7 +128,7 @@ export const minionKCommand: OSBMahojiCommand = {
 			name: 'wilderness',
 			description: 'If you want to kill the monster in the wilderness.',
 			required: false
-		},
+		}
 	],
 	run: async ({
 		options,
@@ -155,7 +155,7 @@ export const minionKCommand: OSBMahojiCommand = {
 			options.quantity,
 			options.method,
 			options.modifier,
-			options.wilderness,
+			options.wilderness
 		);
 	}
 };

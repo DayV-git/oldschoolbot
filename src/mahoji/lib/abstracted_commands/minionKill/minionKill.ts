@@ -41,7 +41,8 @@ export async function minionKillCommand(
 	if (!name) return invalidMonsterMsg;
 
 	if (stringMatches(name, 'colosseum')) return colosseumCommand(user, channelID);
-	if (stringMatches(name, 'nex')) return nexCommand(interaction, user, channelID, modifier? modifier == 'Nex: solo': false);
+	if (stringMatches(name, 'nex'))
+		return nexCommand(interaction, user, channelID, modifier ? modifier === 'Nex: solo' : false);
 	if (stringMatches(name, 'zalcano')) return zalcanoCommand(user, channelID, inputQuantity);
 	if (stringMatches(name, 'tempoross')) return temporossCommand(user, channelID, inputQuantity);
 	if (name.toLowerCase().includes('nightmare')) return nightmareCommand(user, channelID, name, inputQuantity);

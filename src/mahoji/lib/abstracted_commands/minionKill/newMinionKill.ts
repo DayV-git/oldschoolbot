@@ -92,7 +92,7 @@ export function newMinionKillCommand(args: MinionKillOptions) {
 	const osjsMon = Monsters.get(monster.id)!;
 	let { primaryStyle, relevantGearStat } = getAttackStylesContext(attackStyles);
 
-	const destroyLoot = (monster.id === Monsters.Araxxor.id) && inputPVMModifier == 'Araxxor: destroy loot';
+	const destroyLoot = monster.id === Monsters.Araxxor.id && inputPVMModifier === 'Araxxor: destroy loot';
 
 	const isOnTask =
 		currentSlayerTask.assignedTask !== null &&
