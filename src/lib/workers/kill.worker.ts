@@ -18,6 +18,7 @@ export default async ({
 	bossName,
 	catacombs,
 	onTask,
+	destroyLoot,
 	limit,
 	lootTableTertiaryChanges
 }: KillWorkerArgs): KillWorkerReturn => {
@@ -34,6 +35,7 @@ export default async ({
 			bank: osjsMonster.kill(quantity, {
 				inCatacombs: catacombs,
 				onSlayerTask: onTask,
+				destroyLoot: destroyLoot,
 				lootTableOptions: {
 					tertiaryItemPercentageChanges: new Map(lootTableTertiaryChanges)
 				}

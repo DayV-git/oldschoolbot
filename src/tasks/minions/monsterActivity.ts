@@ -2,7 +2,7 @@ import { Time, deepClone, percentChance } from 'e';
 import type { MonsterKillOptions } from 'oldschooljs';
 import { Bank, EMonster, Monsters } from 'oldschooljs';
 
-import { type BitField, Emoji } from '../../lib/constants';
+import { type BitField, Emoji, PvMModifier } from '../../lib/constants';
 import { userhasDiaryTierSync } from '../../lib/diaries';
 import { trackLoot } from '../../lib/lootTrack';
 import killableMonsters from '../../lib/minions/data/killableMonsters';
@@ -125,7 +125,7 @@ interface newOptions {
 	pkEncounters?: number;
 	hasWildySupplies?: boolean;
 	isInWilderness?: boolean;
-	destroyLoot?: boolean;
+	modifier?: PvMModifier;
 	duration: number;
 	hasEliteCA: boolean;
 	hasKourendHard: boolean;
@@ -152,6 +152,7 @@ export function doMonsterTrip(data: newOptions) {
 		pkEncounters,
 		hasWildySupplies,
 		isInWilderness,
+		modifier,
 		hasEliteCA,
 		hasKourendHard,
 		kcBank,
@@ -163,12 +164,10 @@ export function doMonsterTrip(data: newOptions) {
 		userStats,
 		attackStyles,
 		duration,
-		bitfield,
-		destroyLoot
+		bitfield
 	} = data;
 	const currentKC = kcBank.amount(monster.id);
 	const updateBank = new UpdateBank();
-
 	const isRevenantMonster = monster.name.includes('Revenant');
 
 	let skulled = false;
@@ -297,7 +296,6 @@ export function doMonsterTrip(data: newOptions) {
 
 	const killOptions: MonsterKillOptions = {
 		onSlayerTask: slayerContext.isOnTask,
-		destroyLoot: destroyLoot,
 		slayerMaster: slayerContext.isOnTask ? slayerContext.slayerMaster.osjsEnum : undefined,
 		hasSuperiors: superiorTable,
 		inCatacombs: isInCatacombs,
@@ -331,8 +329,9 @@ export function doMonsterTrip(data: newOptions) {
 
 	// Loot
 	const finalQuantity = quantity - newSuperiorCount;
+	const destroyLoot = monster.id === Monsters.Araxxor.id && modifier === 'Araxxor: destroy loot'
+	const loot = wiped || destroyLoot? new Bank() : monster.table.kill(finalQuantity, killOptions);
 
-	const loot = wiped ? new Bank() : monster.table.kill(finalQuantity, killOptions);
 	if (!wiped) {
 		if (monster.specialLoot) {
 			monster.specialLoot({ loot, ownedItems: gearBank.bank, quantity: finalQuantity, cl: data.cl });
@@ -349,7 +348,22 @@ export function doMonsterTrip(data: newOptions) {
 				}
 			}
 		}
+
+		if (destroyLoot) {
+			for (let i = 0; i < quantity; i++) {
+				if (roll(3000)) {
+					loot.add("Nid");
+				}
+				if (roll(50)) {
+					loot.add("Clue Scroll (elite)");
+				}
+			}
+			messages.push(`You detroyed Araxxor's corpse, so received less loot.`);
+		}
+
 		updateBank.itemLootBank.add(loot);
+
+
 		updateBank.xpBank.add(
 			addMonsterXPRaw({
 				monsterID: monster.id,
@@ -402,6 +416,8 @@ export function doMonsterTrip(data: newOptions) {
 	if (deaths > 0) {
 		messages.push(`You died ${deaths}x times.`);
 	}
+
+
 	if (monster.effect) {
 		const effectResult = monster.effect({
 			quantity,
