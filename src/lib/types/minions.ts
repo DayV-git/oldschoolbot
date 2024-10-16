@@ -151,7 +151,7 @@ export interface MonsterActivityTaskOptions extends ActivityTaskOptions {
 
 export interface ClueActivityTaskOptions extends ActivityTaskOptions {
 	type: 'ClueCompletion';
-	ci: number;
+	ci: number[];
 	q: number;
 	implingID?: number;
 	implingClues?: number;

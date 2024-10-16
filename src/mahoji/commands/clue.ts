@@ -77,10 +77,12 @@ export const clueCommand: OSBMahojiCommand = {
 			required: true,
 			autocomplete: async (value, user) => {
 				const bank = getMahojiBank(await mahojiUsersSettingsFetch(user.id, { bank: true }));
-				return ClueTiers.map(i => ({
+				const options = ClueTiers.map(i => ({
 					name: `${i.name} (${bank.amount(i.scrollID)}x Owned)`,
 					value: i.name
 				})).filter(i => !value || i.value.toLowerCase().includes(value));
+				options.push({ name: 'All', value: 'All' });
+				return options;
 			}
 		},
 		{
@@ -105,12 +107,12 @@ export const clueCommand: OSBMahojiCommand = {
 	],
 	run: async ({ options, userID, channelID }: CommandRunOptions<{ tier: string; implings?: string }>) => {
 		const user = await mUserFetch(userID);
-		let quantity = 1;
+		const doingAll = stringMatches('All', options.tier);
 
 		const clueTier = ClueTiers.find(
 			tier => stringMatches(tier.id.toString(), options.tier) || stringMatches(tier.name, options.tier)
-		);
-		if (!clueTier) return 'Invalid clue tier.';
+		)!;
+		if (!clueTier && !doingAll) return 'Invalid clue tier.';
 
 		const clueImpling = options.implings
 			? getItem(/^[0-9]+$/.test(options.implings) ? Number(options.implings) : options.implings)
@@ -120,35 +122,20 @@ export const clueCommand: OSBMahojiCommand = {
 			if (!clueImpling) {
 				return `Invalid impling. Please check your entry, **${options.implings}** doesn't match any impling jars. Make sure the quantity isn't included, etc.`;
 			}
+			if (doingAll) return 'You cant open implings when doing all clues in bank.';
 			if (!user.bank.has(clueImpling.id)) return `You don't have any ${clueImpling.name}s in your bank.`;
 			if (!clueTier.implings?.includes(clueImpling.id)) return `These clues aren't found in ${clueImpling.name}s`;
 		}
 
 		const boosts = [];
+		let quantity = 1;
 
 		const stats = await user.fetchStats({ openable_scores: true });
 
-		let [timeToFinish, percentReduced] = reducedClueTime(
-			clueTier,
-			(stats.openable_scores as ItemBank)[clueTier.id] ?? 1
-		);
-
-		if (percentReduced >= 1) boosts.push(`${percentReduced}% for Clue score`);
-
-		let duration = timeToFinish * quantity;
-
+		const clueList = doingAll ? ClueTiers.filter(tier => user.bank.amount(tier.scrollID) > 0) : [clueTier];
+		let timeToFinish = 0;
 		const maxTripLength = calcMaxTripLength(user, 'ClueCompletion');
 
-		if (duration > maxTripLength) {
-			return `${user.minionName} can't go on Clue trips longer than ${formatDuration(
-				maxTripLength
-			)}, try a lower quantity. The highest amount you can do for ${clueTier.name} is ${Math.floor(
-				maxTripLength / timeToFinish
-			)}.`;
-		}
-
-		const randomAddedDuration = randInt(1, 20);
-		duration += (randomAddedDuration * duration) / 100;
 		const poh = await getPOH(user.id);
 		const hasOrnateJewelleryBox = poh.jewellery_box === getPOHObject('Ornate jewellery box').id;
 		const hasJewelleryBox = poh.jewellery_box !== null;
@@ -183,21 +170,9 @@ export const clueCommand: OSBMahojiCommand = {
 			}
 		];
 
-		for (const { condition, boost, durationMultiplier } of globalBoosts) {
-			if (condition()) {
-				boosts.push(boost);
-				duration *= durationMultiplier;
-			}
-		}
-
-		// Xeric's Talisman boost
-		if (clueTier.name === 'Medium' && hasXericTalisman) {
-			boosts.push("2% for Mounted Xeric's Talisman");
-			duration *= 0.98;
-		}
-
 		// Specific boosts
 		const clueTierBoosts: Record<ClueTier['name'], ClueBoost[]> = {
+			All: [],
 			Beginner: [
 				{
 					item: getOSItem('Ring of the elements'),
@@ -317,18 +292,54 @@ export const clueCommand: OSBMahojiCommand = {
 			]
 		};
 
-		const clueTierName = clueTier.name;
-		const boostList = clueTierBoosts[clueTierName];
-		const result = applyClueBoosts(user, boostList, boosts, duration, clueTier);
+		const cluesToDo = [];
 
-		timeToFinish = result.duration;
+		for (const tier of clueList.reverse()) {
+			const clueTierName = tier.name;
+			let [currentClueTime, percentReduced] = reducedClueTime(
+				tier,
+				(stats.openable_scores as ItemBank)[tier.id] ?? 1
+			);
+
+			if (percentReduced >= 1) boosts.push(`${percentReduced}% for Clue score`);
+			if (timeToFinish + currentClueTime > maxTripLength) break;
+			cluesToDo.push(tier);
+
+			const randomAddedDuration = randInt(1, 20);
+			currentClueTime += (randomAddedDuration * currentClueTime) / 100;
+
+			for (const { condition, boost, durationMultiplier } of globalBoosts) {
+				if (condition()) {
+					boosts.push(boost);
+					currentClueTime *= durationMultiplier;
+				}
+			}
+
+			// Xeric's Talisman boost
+			if (clueTierName === 'Medium' && hasXericTalisman) {
+				boosts.push("2% for Mounted Xeric's Talisman");
+				currentClueTime *= 0.98;
+			}
+
+			const boostList = clueTierBoosts[clueTierName];
+			const result = applyClueBoosts(user, boostList, boosts, currentClueTime, tier);
+
+			timeToFinish += result.duration;
+		}
 
 		let implingLootString = '';
 		let implingClues = 0;
 		if (!clueImpling) {
-			const cost = new Bank().add(clueTier.scrollID, quantity);
-			if (!user.owns(cost)) return `You don't own ${cost}.`;
-			await user.removeItemsFromBank(new Bank().add(clueTier.scrollID, quantity));
+			const cost = new Bank();
+			if (doingAll) {
+				for (const tier of cluesToDo) {
+					cost.add(tier.scrollID);
+				}
+			} else {
+				cost.add(clueTier.scrollID);
+				if (!user.owns(cost)) return `You don't own ${cost}.`;
+			}
+			await user.removeItemsFromBank(cost);
 		} else {
 			const implingJarOpenable = allOpenables.find(o => o.aliases.some(a => stringMatches(a, clueImpling.name)));
 			// If this triggers, it means OSJS probably broke / is missing an alias for an impling jar:
@@ -364,10 +375,10 @@ export const clueCommand: OSBMahojiCommand = {
 			} from ${openedImplings}x ${clueImpling.name}s, and receive the following loot: ${implingLoot}.`;
 		}
 
-		duration = timeToFinish * quantity;
+		const duration = timeToFinish * quantity;
 
 		await addSubTaskToActivityTask<ClueActivityTaskOptions>({
-			ci: clueTier.id,
+			ci: cluesToDo.map(tier => tier.id),
 			implingID: clueImpling ? clueImpling.id : undefined,
 			implingClues: clueImpling ? implingClues : undefined,
 			userID: user.id,
@@ -376,9 +387,9 @@ export const clueCommand: OSBMahojiCommand = {
 			duration,
 			type: 'ClueCompletion'
 		});
-		return `${user.minionName} is now completing ${quantity}x ${
-			clueTier.name
-		} clues, it'll take around ${formatDuration(duration)} to finish.${
+		return `${user.minionName} is now completing ${quantity}x ${cluesToDo
+			.map(tier => tier.name)
+			.join(', ')} clues, it'll take around ${formatDuration(duration)} to finish.${
 			boosts.length > 0 ? `\n\n**Boosts:** ${boosts.join(', ')}.` : ''
 		}${implingLootString}`;
 	}

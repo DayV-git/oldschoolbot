@@ -33,7 +33,7 @@ interface ClueMilestoneReward {
 }
 
 export interface ClueTier {
-	name: 'Beginner' | 'Easy' | 'Medium' | 'Hard' | 'Elite' | 'Master';
+	name: 'Beginner' | 'Easy' | 'Medium' | 'Hard' | 'Elite' | 'Master' | 'All';
 	table: LootTable;
 	id: number;
 	scrollID: number;

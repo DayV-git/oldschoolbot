@@ -111,9 +111,9 @@ export function minionStatus(user: MUser) {
 		case 'ClueCompletion': {
 			const data = currentTask as ClueActivityTaskOptions;
 
-			const clueTier = ClueTiers.find(tier => tier.id === data.ci);
+			const tiers = data.ci.map(id => ClueTiers.find(tier => tier.id === id)).map(tier => tier?.name);
 
-			return `${name} is currently completing ${data.q}x ${clueTier?.name} clues. ${formattedDuration}`;
+			return `${name} is currently completing ${data.q}x ${tiers.join(', ')} clues. ${formattedDuration}`;
 		}
 
 		case 'Crafting': {
