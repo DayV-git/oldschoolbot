@@ -312,7 +312,7 @@ export const clueCommand: OSBMahojiCommand = {
 			if (percentReduced >= 1) boosts.push(`${percentReduced}% for Clue score`);
 			if (timeToFinish + currentClueTime > maxTripLength) break;
 			cluesToDo.push(tier);
-			boosts.push('**'.concat(clueTierName).concat('**'));
+			boosts.push(`**${clueTierName}**`);
 
 			const randomAddedDuration = randInt(1, 20);
 			currentClueTime += (randomAddedDuration * currentClueTime) / 100;
