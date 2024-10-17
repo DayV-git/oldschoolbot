@@ -9,7 +9,7 @@ import { ClueTiers } from '../../lib/clues/clueTiers';
 import { allOpenables, getOpenableLoot } from '../../lib/openables';
 import { getPOHObject } from '../../lib/poh';
 import type { ClueActivityTaskOptions } from '../../lib/types/minions';
-import { formatDuration, isWeekend, stringMatches } from '../../lib/util';
+import { formatDuration, isWeekend, joinStrings, stringMatches } from '../../lib/util';
 import addSubTaskToActivityTask from '../../lib/util/addSubTaskToActivityTask';
 import { calcMaxTripLength } from '../../lib/util/calcMaxTripLength';
 import getOSItem, { getItem } from '../../lib/util/getOSItem';
@@ -77,12 +77,14 @@ export const clueCommand: OSBMahojiCommand = {
 			required: true,
 			autocomplete: async (value, user) => {
 				const bank = getMahojiBank(await mahojiUsersSettingsFetch(user.id, { bank: true }));
-				const options = ClueTiers.map(i => ({
-					name: `${i.name} (${bank.amount(i.scrollID)}x Owned)`,
-					value: i.name
-				})).filter(i => !value || i.value.toLowerCase().includes(value));
-				options.push({ name: 'All', value: 'All' });
-				return options;
+				const options = [{ name: 'All', value: 'All' }];
+				for (const tier of ClueTiers) {
+					options.push({
+						name: `${tier.name} (${bank.amount(tier.scrollID)}x Owned)`,
+						value: tier.name
+					});
+				}
+				return options.filter(i => !value || i.value.toLowerCase().includes(value));
 			}
 		},
 		{
@@ -133,6 +135,7 @@ export const clueCommand: OSBMahojiCommand = {
 		const stats = await user.fetchStats({ openable_scores: true });
 
 		const clueList = doingAll ? ClueTiers.filter(tier => user.bank.amount(tier.scrollID) > 0) : [clueTier];
+		if (doingAll && clueList.length === 0) return `You don't have any clues in your bank.`;
 		let timeToFinish = 0;
 		const maxTripLength = calcMaxTripLength(user, 'ClueCompletion');
 
@@ -172,7 +175,6 @@ export const clueCommand: OSBMahojiCommand = {
 
 		// Specific boosts
 		const clueTierBoosts: Record<ClueTier['name'], ClueBoost[]> = {
-			All: [],
 			Beginner: [
 				{
 					item: getOSItem('Ring of the elements'),
@@ -294,6 +296,12 @@ export const clueCommand: OSBMahojiCommand = {
 
 		const cluesToDo = [];
 
+		for (const { condition, boost } of globalBoosts) {
+			if (condition()) {
+				boosts.push(boost);
+			}
+		}
+
 		for (const tier of clueList.reverse()) {
 			const clueTierName = tier.name;
 			let [currentClueTime, percentReduced] = reducedClueTime(
@@ -304,13 +312,13 @@ export const clueCommand: OSBMahojiCommand = {
 			if (percentReduced >= 1) boosts.push(`${percentReduced}% for Clue score`);
 			if (timeToFinish + currentClueTime > maxTripLength) break;
 			cluesToDo.push(tier);
+			boosts.push('**'.concat(clueTierName).concat('**'));
 
 			const randomAddedDuration = randInt(1, 20);
 			currentClueTime += (randomAddedDuration * currentClueTime) / 100;
 
-			for (const { condition, boost, durationMultiplier } of globalBoosts) {
+			for (const { condition, durationMultiplier } of globalBoosts) {
 				if (condition()) {
-					boosts.push(boost);
 					currentClueTime *= durationMultiplier;
 				}
 			}
@@ -337,8 +345,8 @@ export const clueCommand: OSBMahojiCommand = {
 				}
 			} else {
 				cost.add(clueTier.scrollID);
-				if (!user.owns(cost)) return `You don't own ${cost}.`;
 			}
+			if (!user.owns(cost)) return `You don't own ${cost}.`;
 			await user.removeItemsFromBank(cost);
 		} else {
 			const implingJarOpenable = allOpenables.find(o => o.aliases.some(a => stringMatches(a, clueImpling.name)));
@@ -387,9 +395,9 @@ export const clueCommand: OSBMahojiCommand = {
 			duration,
 			type: 'ClueCompletion'
 		});
-		return `${user.minionName} is now completing ${quantity}x ${cluesToDo
-			.map(tier => tier.name)
-			.join(', ')} clues, it'll take around ${formatDuration(duration)} to finish.${
+		return `${user.minionName} is now completing ${quantity}x ${joinStrings(
+			cluesToDo.reverse().map(tier => tier.name)
+		)} clues, it'll take around ${formatDuration(duration)} to finish.${
 			boosts.length > 0 ? `\n\n**Boosts:** ${boosts.join(', ')}.` : ''
 		}${implingLootString}`;
 	}

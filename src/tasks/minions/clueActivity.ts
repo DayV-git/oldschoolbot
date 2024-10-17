@@ -2,6 +2,7 @@ import { Bank } from 'oldschooljs';
 
 import { ClueTiers } from '../../lib/clues/clueTiers';
 import type { ClueActivityTaskOptions } from '../../lib/types/minions';
+import { joinStrings } from '../../lib/util';
 import { handleTripFinish } from '../../lib/util/handleTripFinish';
 
 export const clueTask: MinionTask = {
@@ -11,7 +12,7 @@ export const clueTask: MinionTask = {
 		const tiers = clueIDs.map(id => ClueTiers.find(mon => mon.id === id)!);
 		const user = await mUserFetch(userID);
 
-		const str = `${user.mention}, ${user.minionName} finished completing ${quantity} ${tiers.map(tier => tier.name).join(', ')} clues. ${
+		const str = `${user.mention}, ${user.minionName} finished completing ${quantity} ${joinStrings(tiers.map(tier => tier.name))} clues. ${
 			user.minionName
 		} carefully places the reward casket${quantity > 1 || tiers.length > 1 ? 's' : ''} in your bank.`;
 
