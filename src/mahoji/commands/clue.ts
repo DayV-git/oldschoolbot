@@ -336,7 +336,6 @@ export const clueCommand: OSBMahojiCommand = {
 			if (timeToFinish + result.duration > maxTripLength) break;
 			cluesToDo.push(tier);
 			if (tierBoosts.length > 0) {
-				allTierBoosts.push();
 				allTierBoosts.push(`**${clueTierName}**: ${tierBoosts.join(', ')}`);
 			}
 			timeToFinish += result.duration;
