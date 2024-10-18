@@ -9,7 +9,7 @@ import { ClueTiers } from '../../lib/clues/clueTiers';
 import { allOpenables, getOpenableLoot } from '../../lib/openables';
 import { getPOHObject } from '../../lib/poh';
 import type { ClueActivityTaskOptions } from '../../lib/types/minions';
-import { formatDuration, isWeekend, joinStrings, stringMatches } from '../../lib/util';
+import { formatDuration, isWeekend, stringMatches } from '../../lib/util';
 import addSubTaskToActivityTask from '../../lib/util/addSubTaskToActivityTask';
 import { calcMaxTripLength } from '../../lib/util/calcMaxTripLength';
 import getOSItem, { getItem } from '../../lib/util/getOSItem';
@@ -395,9 +395,9 @@ export const clueCommand: OSBMahojiCommand = {
 			duration,
 			type: 'ClueCompletion'
 		});
-		return `${user.minionName} is now completing ${quantity}x ${joinStrings(
+		return `${user.minionName} is now completing ${quantity}x ${
 			cluesToDo.reverse().map(tier => tier.name)
-		)} clues, it'll take around ${formatDuration(duration)} to finish.${
+		.join(', ')} clues, it'll take around ${formatDuration(duration)} to finish.${
 			boosts.length > 0 ? `\n\n**Boosts:** ${boosts.join(', ')}.` : ''
 		}${implingLootString}`;
 	}
