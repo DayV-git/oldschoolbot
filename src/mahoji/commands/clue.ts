@@ -395,9 +395,10 @@ export const clueCommand: OSBMahojiCommand = {
 			duration,
 			type: 'ClueCompletion'
 		});
-		return `${user.minionName} is now completing ${quantity}x ${
-			cluesToDo.reverse().map(tier => tier.name)
-		.join(', ')} clues, it'll take around ${formatDuration(duration)} to finish.${
+		return `${user.minionName} is now completing ${quantity}x ${cluesToDo
+			.reverse()
+			.map(tier => tier.name)
+			.join(', ')} clues, it'll take around ${formatDuration(duration)} to finish.${
 			boosts.length > 0 ? `\n\n**Boosts:** ${boosts.join(', ')}.` : ''
 		}${implingLootString}`;
 	}
