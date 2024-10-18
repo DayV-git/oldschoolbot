@@ -302,17 +302,18 @@ export const clueCommand: OSBMahojiCommand = {
 			}
 		}
 
+		const allTierBoosts = [];
+
 		for (const tier of clueList.reverse()) {
+			//reverse order to prioritise higher tier clues
+			const tierBoosts = [];
 			const clueTierName = tier.name;
 			let [currentClueTime, percentReduced] = reducedClueTime(
 				tier,
 				(stats.openable_scores as ItemBank)[tier.id] ?? 1
 			);
 
-			if (percentReduced >= 1) boosts.push(`${percentReduced}% for Clue score`);
-			if (timeToFinish + currentClueTime > maxTripLength) break;
-			cluesToDo.push(tier);
-			boosts.push(`**${clueTierName}**`);
+			if (percentReduced >= 1) tierBoosts.push(`${percentReduced}% for Clue score`);
 
 			const randomAddedDuration = randInt(1, 20);
 			currentClueTime += (randomAddedDuration * currentClueTime) / 100;
@@ -325,14 +326,25 @@ export const clueCommand: OSBMahojiCommand = {
 
 			// Xeric's Talisman boost
 			if (clueTierName === 'Medium' && hasXericTalisman) {
-				boosts.push("2% for Mounted Xeric's Talisman");
+				tierBoosts.push("2% for Mounted Xeric's Talisman");
 				currentClueTime *= 0.98;
 			}
 
 			const boostList = clueTierBoosts[clueTierName];
-			const result = applyClueBoosts(user, boostList, boosts, currentClueTime, tier);
+			const result = applyClueBoosts(user, boostList, tierBoosts, currentClueTime, tier);
 
+			if (timeToFinish + result.duration > maxTripLength) break;
+			cluesToDo.push(tier);
+			if (tierBoosts.length > 0) {
+				allTierBoosts.push();
+				allTierBoosts.push(`**${clueTierName}**: ${tierBoosts.join(', ')}`);
+			}
 			timeToFinish += result.duration;
+		}
+
+		if (allTierBoosts.length > 0) {
+			if (cluesToDo.length === 1) allTierBoosts.shift(); //remove first element (tier name) as not needed
+			boosts.push(allTierBoosts.reverse().join(', '));
 		}
 
 		let implingLootString = '';
