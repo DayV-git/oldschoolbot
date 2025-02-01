@@ -1,5 +1,5 @@
 import { beforeAll, describe, expect, test } from 'vitest';
-import { EquipmentSlot, Items, Openables, Wiki, getItem } from '../';
+import { EquipmentSlot, Items, Openables, getItem } from '../';
 
 const expectedIDTuple = [
 	['Coins', 995],
