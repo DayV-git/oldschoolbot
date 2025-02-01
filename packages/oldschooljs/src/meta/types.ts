@@ -209,10 +209,6 @@ export interface Item {
 	 */
 	unobtainable?: boolean;
 	/**
-	 * When the item was released.
-	 */
-	release_date?: string | null;
-	/**
 	 * If the item is equipable (based on right-click menu entry).
 	 */
 	equipable?: true;
