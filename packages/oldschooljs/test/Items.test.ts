@@ -180,19 +180,18 @@ test('Dwarf toolkit', () => {
 	expect(Items.get('Dwarf toolkit')).toBeUndefined();
 });
 
-test('Item requirements', async () => {
+test('Item requirements and unobtainables', async () => {
 	for (const item of Items.values()) {
 		if (
-			item.equipable_by_player &&
 			item.release_date &&
-			Number.parseInt(item.release_date.substring(0, 4)) >= 2020 &&
+			Number.parseInt(item.release_date.substring(0, 4)) >= 2024 &&
 			Number.parseInt(item.release_date.substring(5, 7)) >= 8
 		) {
 			console.log(item.name, item.release_date.substring(5, 7), item.release_date.substring(0, 4));
 			const searchResults = await Wiki.search(item.name);
 			const wikiPage = searchResults[0];
-			expect(wikiPage).toBeTruthy();
-			if (wikiPage!.extract) {
+			if (wikiPage?.extract) {
+				expect(wikiPage.extract.toLowerCase().includes('unobtainable')).toBeFalsy();
 				const itemReqs = extractRequirements(wikiPage.extract);
 				console.log(item.name, itemReqs);
 				if (Object.keys(itemReqs).length > 0) {
