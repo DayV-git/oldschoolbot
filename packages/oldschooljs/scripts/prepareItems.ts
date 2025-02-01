@@ -545,7 +545,6 @@ export default async function prepareItems(): Promise<void> {
 
 		if (!previousItem) {
 			//scrape wiki for new items
-			console.log(item.id, item.name);
 			const searchResults = await Wiki.search(item.name);
 			const wikiPage = searchResults[0];
 			if (wikiPage?.extract && wikiPage.title.toLowerCase() === item.name.toLowerCase()) {
