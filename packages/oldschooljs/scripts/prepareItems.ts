@@ -6,6 +6,7 @@ import fetch from 'node-fetch';
 
 import { EquipmentSlot, type Item } from '../src/meta/types';
 import Items, { CLUE_SCROLLS, CLUE_SCROLL_NAMES, USELESS_ITEMS } from '../src/structures/Items';
+import Wiki from '../src/structures/wiki';
 import itemID from '../src/util/itemID';
 import { getItemOrThrow } from '../src/util/util';
 import { itemChanges } from './manualItemChanges';
@@ -40,7 +41,7 @@ const itemsToRename = [
 
 const itemsBeingModified = new Set([...equipmentModSrc.map(i => i[0]), ...itemsToRename.map(i => i.id)]);
 
-const newItemJSON: { [key: string]: Item } = {};
+const newItemJSON: { [key: string]: Item | undefined } = {};
 
 interface RawItemCollection {
 	[index: string]: Item & {
@@ -302,6 +303,54 @@ const itemsToIgnorePrices = [
 
 const keysToWarnIfRemovedOrAdded: (keyof Item)[] = ['equipable', 'equipment', 'weapon'];
 
+const combatSkills = ['attack', 'strength', 'defence', 'ranged', 'magic', 'hitpoints'];
+
+type Requirement = {
+	[key: string]: number;
+};
+
+function extractRequirements(text: string): Requirement {
+	// Updated regex to capture multiple skills and handle "level X in skill" or "X skill"
+	const regex = /(?:requires|requiring) (?:level )?([\d\w\s,]+(?: and \d+ \w+)?)(?=\s|$)/gi;
+	const requirements: Requirement = {};
+	let match: RegExpExecArray | null;
+
+	// Helper function to process the matched skill and level
+	function addRequirement(skill: string, level: string): void {
+		// Check if skill is in the combatSkills list and is not associated with enchantment for Magic
+		if (combatSkills.includes(skill) && !(text.includes('enchant') && skill === 'magic')) {
+			requirements[skill] = Number.parseInt(level, 10);
+		}
+	}
+
+	while ((match = regex.exec(text)) !== null) {
+		const skillsList = match[1]; // Extracts the skills and levels (e.g., "75 Ranged and 50 Defence")
+
+		// Skip cases where the pattern indicates it's related to access, bless, etc.
+		if (/\d+ \w+ to (create|access|enter|bless|unlock)/.test(text.slice(match.index))) continue;
+
+		// If we find a "level X in skill" format, capture it
+		const levelSkillMatches = skillsList.match(/(?:level )?(\d+)\s*(?:in\s*)?(\w+)/g);
+		if (levelSkillMatches) {
+			levelSkillMatches.forEach(match => {
+				const [level, skill] = match.split(' ');
+				addRequirement(skill, level);
+			});
+		}
+
+		// If it's in the "X skill and Y skill" format, handle that too
+		const andSkillMatches = skillsList.match(/\d+ \w+/g);
+		if (andSkillMatches) {
+			andSkillMatches.forEach(match => {
+				const [level, skill] = match.split(' ');
+				addRequirement(skill, level);
+			});
+		}
+	}
+
+	return requirements;
+}
+
 export default async function prepareItems(): Promise<void> {
 	const messages: string[] = [];
 	const allItemsRaw: RawItemCollection = await fetch(
@@ -321,8 +370,8 @@ export default async function prepareItems(): Promise<void> {
 		throw new Error('Failed to fetch prices');
 	}
 
-	const newItems = [];
-	const nameChanges = [];
+	const newItems: Item[] = [];
+	const nameChanges: string[] = [];
 
 	for (let item of Object.values(allItems)) {
 		if (itemShouldntBeAdded(item)) continue;
@@ -348,7 +397,8 @@ export default async function prepareItems(): Promise<void> {
 			'quest_item',
 			'weight',
 			'examine',
-			'wiki_url'
+			'wiki_url',
+			'release_date'
 		]) {
 			// @ts-ignore
 			delete item[delKey];
@@ -462,6 +512,7 @@ export default async function prepareItems(): Promise<void> {
 			item.lowalch = previousItem.lowalch;
 			item.highalch = previousItem.highalch;
 			item.wiki_name = previousItem.wiki_name;
+			item.unobtainable = previousItem.unobtainable;
 			if (previousItem.equipment?.requirements) {
 				// @ts-ignore ignore
 				item.equipment = {
@@ -469,8 +520,6 @@ export default async function prepareItems(): Promise<void> {
 					requirements: previousItem.equipment.requirements
 				};
 			}
-		}
-		if (previousItem) {
 			if (item.equipment?.requirements === null && previousItem.equipment?.requirements !== null) {
 				messages.push(
 					`WARNING: ${item.name} (${item.id}) had requirements removed: BEFORE[${JSON.stringify(
@@ -488,12 +537,28 @@ export default async function prepareItems(): Promise<void> {
 			}
 		}
 
-		if (previousItem?.equipment?.requirements && !item.equipment?.requirements) {
-			// @ts-ignore ignore
-			item.equipment = {
-				...item.equipment,
-				requirements: previousItem.equipment.requirements
-			};
+		if (item.name.toLowerCase().includes('warhammer') && item.equipment?.requirements?.attack) {
+			//these were removed and changed to str reqs
+			item.equipment.requirements.strength = item.equipment.requirements.attack;
+			item.equipment.requirements.attack = undefined;
+		}
+
+		if (!previousItem) {
+			//scrape wiki for new items
+			console.log(item.id, item.name);
+			const searchResults = await Wiki.search(item.name);
+			const wikiPage = searchResults[0];
+			if (wikiPage?.extract && wikiPage.title.toLowerCase() === item.name.toLowerCase()) {
+				item.unobtainable = /\bunobtainable\b(?!.*\b(if lost|via)\b)/gi.test(wikiPage.extract.toLowerCase())
+					? true
+					: undefined;
+				if (item.equipment) {
+					const itemReqs = extractRequirements(wikiPage.extract.toLowerCase());
+					if (Object.keys(itemReqs).length > 0) {
+						item.equipment.requirements = deepMerge(item.equipment.requirements ?? {}, itemReqs);
+					}
+				}
+			}
 		}
 
 		if (itemChanges[item.id]) {

@@ -205,6 +205,10 @@ export interface Item {
 	 */
 	noteable?: boolean;
 	/**
+	 * If the item can be obtained in game.
+	 */
+	unobtainable?: boolean;
+	/**
 	 * When the item was released.
 	 */
 	release_date?: string | null;
