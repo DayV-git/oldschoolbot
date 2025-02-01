@@ -1,5 +1,5 @@
 import { beforeAll, describe, expect, test } from 'vitest';
-import { EquipmentSlot, Items, Openables, getItem } from '../';
+import { EquipmentSlot, Items, Openables, Wiki, getItem } from '../';
 
 const expectedIDTuple = [
 	['Coins', 995],
@@ -62,6 +62,27 @@ function checkItems(): void {
 	}
 }
 
+type Requirement = {
+	[key: string]: number;
+};
+
+function extractRequirements(text: string): Requirement {
+	const regex =
+		/(?:requires|requiring) (?:an? )?(\w+) level of (\d+)|(?:requires|requiring) (?:level )?(\d+) (\w+)/gi;
+	const requirements: Requirement = {};
+	let match: RegExpExecArray | null;
+
+	while ((match = regex.exec(text)) !== null) {
+		const [, skill1, level1, level2, skill2] = match;
+		if (skill1 && level1) {
+			requirements[skill1.toLowerCase()] = Number.parseInt(level1, 10);
+		} else if (skill2 && level2) {
+			requirements[skill2.toLowerCase()] = Number.parseInt(level2, 10);
+		}
+	}
+
+	return requirements;
+}
 describe('Items', () => {
 	test('All openables must have the ID of a real item', () => {
 		for (const openable of Openables.values()) {
@@ -158,3 +179,26 @@ test('Dwarf toolkit', () => {
 	expect(Items.get(0)).toBeUndefined();
 	expect(Items.get('Dwarf toolkit')).toBeUndefined();
 });
+
+test('Item requirements', async () => {
+	for (const item of Items.values()) {
+		if (
+			item.equipable_by_player &&
+			item.release_date &&
+			Number.parseInt(item.release_date.substring(0, 4)) >= 2020 &&
+			Number.parseInt(item.release_date.substring(5, 7)) >= 8
+		) {
+			console.log(item.name, item.release_date.substring(5, 7), item.release_date.substring(0, 4));
+			const searchResults = await Wiki.search(item.name);
+			const wikiPage = searchResults[0];
+			expect(wikiPage).toBeTruthy();
+			if (wikiPage!.extract) {
+				const itemReqs = extractRequirements(wikiPage.extract);
+				console.log(item.name, itemReqs);
+				if (Object.keys(itemReqs).length > 0) {
+					expect([item.name, itemReqs]).toEqual([item.name, item.equipment!.requirements]);
+				}
+			}
+		}
+	}
+}, 600_000);
