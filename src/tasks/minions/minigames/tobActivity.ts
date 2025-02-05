@@ -71,6 +71,7 @@ export const tobTask: MinionTask = {
 		const globalTobCost = new Bank();
 		const totalLoot = new Bank();
 		const previousCLs = allUsers.map(i => i.cl.clone());
+		const eliteCAs = allUsers.map(i => i.hasCompletedCATier('elite'));
 		let raidId = 0;
 		let wipeCount = 0;
 		let earnedAttempts = 0;
@@ -80,10 +81,10 @@ export const tobTask: MinionTask = {
 			raidId = i + 1;
 			const deaths = allDeaths[i];
 			const wipedRoom = wipedRooms[i];
-			const tobUsers = users.map((i, index) => ({ id: i, deaths: deaths[index] }));
+			const tobUsers = users.map((i, index) => ({ id: i, deaths: deaths[index], eliteCA: eliteCAs[index] }));
 			if (data.solo) {
-				tobUsers.push({ id: miniID(3), deaths: [] });
-				tobUsers.push({ id: miniID(3), deaths: [] });
+				tobUsers.push({ id: miniID(3), deaths: [], eliteCA: false });
+				tobUsers.push({ id: miniID(3), deaths: [], eliteCA: false });
 			}
 
 			const result = TheatreOfBlood.complete({

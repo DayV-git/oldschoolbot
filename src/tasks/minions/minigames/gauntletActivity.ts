@@ -32,10 +32,13 @@ export const gauntletTask: MinionTask = {
 				deaths++;
 			}
 			loot.add(
-				gauntlet({
-					died,
-					type: corrupted ? 'corrupted' : 'normal'
-				})
+				gauntlet(
+					{
+						died,
+						type: corrupted ? 'corrupted' : 'normal'
+					},
+					{ tertiaryItemPercentageChanges: user.buildTertiaryItemChanges() }
+				)
 			);
 		}
 		if (corrupted && !user.hasEquippedOrInBank('Gauntlet cape') && deaths < quantity) {

@@ -595,6 +595,7 @@ interface TOALootUser {
 	cl: Bank;
 	kc: number;
 	deaths: number[];
+	eliteCA: boolean;
 }
 
 export const toaOrnamentKits = [
@@ -652,7 +653,7 @@ export function calcTOALoot({ users, raidLevel }: { users: TOALootUser[]; raidLe
 			loot.add(user.id, "Tumeken's guardian");
 		}
 
-		const eliteClueChance = (user.points / 200_000 / users.length) * 100;
+		const eliteClueChance = (user.points / 200_000 / users.length) * (user.eliteCA ? 105 : 100);
 		if (percentChance(eliteClueChance)) {
 			loot.add(user.id, 'Clue scroll (elite)');
 		}
@@ -1269,11 +1270,11 @@ export async function toaStartCommand(
 		}))
 	});
 
-	const userArr: [string, number, number[]][][] = [];
+	const userArr: [string, number, number[], boolean][][] = [];
 	for (let i = 0; i < quantity; i++) {
-		const thisQtyArr: [string, number, number[]][] = [];
+		const thisQtyArr: [string, number, number[], boolean][] = [];
 		for (const user of toaSimResults[i].parsedTeam) {
-			thisQtyArr.push([user.id, user.points, user.deaths]);
+			thisQtyArr.push([user.id, user.points, user.deaths, user.eliteCA]);
 		}
 		userArr.push(thisQtyArr);
 	}
@@ -1340,6 +1341,7 @@ interface ParsedTeamMember {
 	deaths: number[];
 	points: number;
 	attempts: number;
+	eliteCA: boolean;
 }
 
 function createTOATeam({
@@ -1384,7 +1386,8 @@ function createTOATeam({
 					raidLevel,
 					minigameScores.raids + minigameScores.tob,
 					team.length
-				)
+				),
+			eliteCA: user.hasCompletedCATier('elite')
 		});
 	}
 
@@ -1455,7 +1458,8 @@ function createTOATeam({
 			id: u.id,
 			kc: u.totalKC,
 			attempts: u.totalAttempts,
-			calcPointsAndDeaths: u.calcPointsAndDeaths
+			calcPointsAndDeaths: u.calcPointsAndDeaths,
+			eliteCA: u.eliteCA
 		});
 	}
 	let duration = baseTOADurations[raidLevel];

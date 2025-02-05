@@ -158,6 +158,7 @@ export async function createTeam(
 			personalPoints: points,
 			canReceiveAncientTablet: !bank.has('Ancient tablet'),
 			canReceiveDust: true,
+			eliteCA: u.hasCompletedCATier('elite'),
 			deaths,
 			deathChance
 		});

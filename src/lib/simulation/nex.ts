@@ -11,7 +11,7 @@ import {
 	roll,
 	sumArr
 } from 'e';
-import { Bank } from 'oldschooljs';
+import { Bank, LootTable, type LootTableRollOptions, tertiaryItemChanges } from 'oldschooljs';
 import { randomVariation } from 'oldschooljs/dist/util/util';
 
 import { exponentialPercentScale, formatDuration } from '@oldschoolgg/toolkit/util';
@@ -125,11 +125,13 @@ interface TeamMember {
 	totalDefensivePercent: number;
 	teamID: number;
 	fake: boolean;
+	eliteCA: boolean;
 }
 
 export interface NexContext {
 	quantity: number;
-	team: { id: string; teamID: number; contribution: number; deaths: number[]; fake?: boolean }[];
+	team: { id: string; teamID: number; contribution: number; deaths: number[]; fake?: boolean; eliteCA: boolean }[];
+	lootTableTertiaryChanges?: LootTableRollOptions;
 }
 
 export const purpleNexItems = resolveItems([
@@ -142,7 +144,9 @@ export const purpleNexItems = resolveItems([
 	'Torva platelegs (damaged)'
 ]);
 
-export function handleNexKills({ quantity, team }: NexContext) {
+const clueTable = new LootTable().tertiary(48, 'Clue scroll (elite)');
+
+export function handleNexKills({ quantity, team, lootTableTertiaryChanges }: NexContext) {
 	const teamLoot = new TeamLoot(purpleNexItems);
 
 	for (let i = 0; i < quantity; i++) {
@@ -185,9 +189,13 @@ export function handleNexKills({ quantity, team }: NexContext) {
 				teamLoot.add(teamMember.id, 'Nexling');
 			}
 
-			if (roll(48)) {
-				teamLoot.add(teamMember.id, 'Clue scroll (elite)');
-			}
+			const lootOptions = lootTableTertiaryChanges ?? {
+				tertiaryItemPercentageChanges: tertiaryItemChanges(false, false, false, [
+					{ tier: 'elite', completed: teamMember.eliteCA }
+				])
+			};
+
+			teamLoot.add(teamMember.id, clueTable.roll(1, lootOptions));
 		}
 	}
 
@@ -271,7 +279,8 @@ export async function calculateNexDetails({ team }: { team: MUser[] }) {
 			totalOffensivePecent,
 			totalDefensivePercent,
 			teamID: resultTeam.length,
-			fake: resultTeam.map(m => m.id).includes(member.id)
+			fake: resultTeam.map(m => m.id).includes(member.id),
+			eliteCA: member.hasCompletedCATier('elite')
 		});
 	}
 

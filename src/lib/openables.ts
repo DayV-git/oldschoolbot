@@ -11,7 +11,7 @@ import {
 	ZombiePiratesLocker
 } from 'oldschooljs';
 import { SkillsEnum } from 'oldschooljs/dist/constants';
-import type { Item, OpenableOpenOptions } from 'oldschooljs/dist/meta/types';
+import type { Item, LootTableRollOptions, OpenableOpenOptions } from 'oldschooljs/dist/meta/types';
 import { HallowedSackTable } from 'oldschooljs/dist/simulation/openables/HallowedSack';
 import { Implings } from 'oldschooljs/dist/simulation/openables/Implings';
 
@@ -73,6 +73,7 @@ interface OpenArgs {
 	quantity: number;
 	user: MUser;
 	self: UnifiedOpenable;
+	lootTableOptions: LootTableRollOptions;
 }
 
 export interface UnifiedOpenable {
@@ -102,15 +103,15 @@ for (const clueTier of ClueTiers) {
 		id: casketItem.id,
 		openedItem: casketItem,
 		aliases: [clueTier.name.toLowerCase()],
-		output: async ({ quantity, user, self }) => {
+		output: async ({ quantity, user, self, lootTableOptions }) => {
 			const clueTier = ClueTiers.find(c => c.id === self.id)!;
-			const loot = clueTier.table.roll(quantity);
+			const loot = clueTier.table.roll(quantity, lootTableOptions);
 			let mimicNumber = 0;
 			if (clueTier.mimicChance) {
 				const table = clueTier.name === 'Master' ? MasterMimicTable : EliteMimicTable;
 				for (let i = 0; i < quantity; i++) {
 					if (roll(clueTier.mimicChance)) {
-						loot.add(table.roll());
+						loot.add(table.roll(1, lootTableOptions));
 						mimicNumber++;
 					}
 				}
@@ -529,7 +530,8 @@ export function getOpenableLoot({
 	quantity: number;
 	user: MUser;
 }) {
+	const lootTableOptions = { tertiaryItemPercentageChanges: user.buildTertiaryItemChanges() };
 	return openable.output instanceof LootTable
-		? { bank: openable.output.roll(quantity), message: null }
-		: openable.output({ user, self: openable, quantity });
+		? { bank: openable.output.roll(quantity, lootTableOptions), message: null }
+		: openable.output({ user, self: openable, quantity, lootTableOptions });
 }

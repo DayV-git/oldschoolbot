@@ -1,8 +1,9 @@
 import { toTitleCase } from '@oldschoolgg/toolkit/util';
 import type { CommandRunOptions } from '@oldschoolgg/toolkit/util';
 import { ApplicationCommandOptionType } from 'discord.js';
-import { Bank, Monsters } from 'oldschooljs';
+import { Bank, Monsters, tertiaryItemChanges } from 'oldschooljs';
 
+import { CombatAchievements } from '../../lib/combat_achievements/combatAchievements';
 import { PerkTier } from '../../lib/constants';
 import { simulatedKillables } from '../../lib/simulation/simulatedKillables';
 import { slayerMasterChoices } from '../../lib/slayer/constants';
@@ -86,15 +87,39 @@ export const killCommand: OSBMahojiCommand = {
 			description: 'On slayer task from a master?',
 			required: false,
 			choices: slayerMasterChoices
+		},
+		{
+			type: ApplicationCommandOptionType.Boolean,
+			name: 'combat_achievements',
+			description: 'Completed all combat achieviements?',
+			required: false
+		},
+		{
+			type: ApplicationCommandOptionType.Boolean,
+			name: 'ring_of_wealth',
+			description: 'Equipped ring of wealth in wildy?',
+			required: false
 		}
 	],
 	run: async ({
 		options,
 		userID,
 		interaction
-	}: CommandRunOptions<{ name: string; quantity: number; catacombs: boolean; master: string }>) => {
+	}: CommandRunOptions<{
+		name: string;
+		quantity: number;
+		catacombs: boolean;
+		master: string;
+		combat_achievements: boolean;
+		ring_of_wealth: boolean;
+	}>) => {
 		const user = await mUserFetch(userID);
 		await deferInteraction(interaction);
+		const tiers = (Object.keys(CombatAchievements) as Array<keyof typeof CombatAchievements>).map(tier => ({
+			tier: tier,
+			completed: options.combat_achievements
+		}));
+
 		const result = await Workers.kill({
 			quantity: options.quantity,
 			bossName: options.name,
@@ -103,9 +128,12 @@ export const killCommand: OSBMahojiCommand = {
 			onTask: options.master !== undefined,
 			slayerMaster: slayerMasters.find(sMaster => sMaster.name === options.master)?.osjsEnum,
 			lootTableTertiaryChanges: Array.from(
-				user
-					.buildTertiaryItemChanges(false, options.master === 'Krystilia', options.master !== undefined)
-					.entries()
+				tertiaryItemChanges(
+					options.ring_of_wealth,
+					options.master === 'Krystilia',
+					options.master !== undefined,
+					tiers
+				).entries()
 			)
 		});
 

@@ -134,11 +134,13 @@ const pages = resolveItems([
 
 export function openCoffin(floor: number, user: MUser): Bank {
 	const loot = new Bank();
+	const lootTableOptions = { tertiaryItemPercentageChanges: user.buildTertiaryItemChanges() };
+
 	const floorObj = sepulchreFloors[floor - 1];
 	if (roll(floorObj.lockpickCoffinChance)) {
 		loot.add('Strange old lockpick');
 	}
-	loot.add(floorObj.coffinTable.roll());
+	loot.add(floorObj.coffinTable.roll(1, lootTableOptions));
 	loot.add('Hallowed mark', randInt(floorObj.marksRange[0], floorObj.marksRange[1]));
 
 	const page = pages[floor - 1];

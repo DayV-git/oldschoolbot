@@ -1,6 +1,7 @@
-import { percentChance, sumArr } from 'e';
+import { percentChance } from 'e';
 import type { Bank } from 'oldschooljs';
 
+import type { CATier } from '../../combat_achievements/combatAchievements';
 import {
 	birdsNestID,
 	eggNest,
@@ -11,15 +12,7 @@ import {
 } from '../../simulation/birdsNest';
 import { SkillsEnum } from '../../skilling/types';
 import { GearBank } from '../../structures/GearBank';
-import { randFloat, roll } from '../../util';
-import itemID from '../../util/itemID';
-
-const clues = [
-	[itemID('Clue scroll(elite)'), 1 / 10],
-	[itemID('Clue scroll(hard)'), 2 / 10],
-	[itemID('Clue scroll(medium)'), 3 / 10],
-	[itemID('Clue scroll(easy)'), 4 / 10]
-];
+import { LootTable, roll } from '../../util';
 
 export default function addSkillingClueToLoot(
 	user: MUser | GearBank,
@@ -34,13 +27,25 @@ export default function addSkillingClueToLoot(
 ) {
 	const userLevel = user instanceof GearBank ? user.skillsAsLevels[skill] : user.skillLevel(skill);
 	const nestChance = wcCapeNestBoost ? Math.floor(256 * 0.9) : 256;
-	const cluesTotalWeight = sumArr(clues.map(c => c[1]));
-	let chance = Math.floor(clueChance / (100 + userLevel));
 	let nests = 0;
 
-	if (skill === SkillsEnum.Woodcutting && twitcherSetting === 'clue') {
-		chance = Math.floor((clueChance * 0.8) / (100 + userLevel));
-	}
+	const twitcherChance = skill === SkillsEnum.Woodcutting && twitcherSetting === 'clue' ? 0.8 : 1.0;
+
+	const clues = [
+		{ tier: 'elite', weight: 10 },
+		{ tier: 'hard', weight: 3.3 },
+		{ tier: 'medium', weight: 2 },
+		{ tier: 'easy', weight: 1.7 },
+		{ tier: 'beginner', weight: 0.2 }
+	];
+
+	const clueTable = new LootTable();
+	clues.forEach(({ tier, weight }) => {
+		const ca = tier !== 'beginner' && user.hasCompletedCATier(tier as CATier) ? 0.95 : 1.0;
+		const rate = Math.floor((weight * Math.floor(clueChance * twitcherChance * ca)) / (100 + userLevel));
+		clueTable.tertiary(rate, new LootTable().every(birdsNestID).every(`Clue scroll (${tier})`));
+	});
+	loot.add(clueTable.roll(quantity));
 
 	for (let i = 0; i < quantity; i++) {
 		if (skill === SkillsEnum.Woodcutting && !clueNestsOnly && roll(nestChance)) {
@@ -61,29 +66,9 @@ export default function addSkillingClueToLoot(
 				}
 			} else if (strungRabbitFoot) {
 				loot.add(strungRabbitFootNestTable.roll());
-				continue;
 			} else {
 				loot.add(nestTable.roll());
-				continue;
 			}
-		}
-
-		if (!roll(chance)) continue;
-		let gotClue = false;
-		let clueRoll = randFloat(0, cluesTotalWeight);
-		for (const clue of clues) {
-			if (clueRoll < clue[1]) {
-				nests++;
-				gotClue = true;
-				loot.add(clue[0]);
-				break;
-			}
-			// Remove weighting to check next tier.
-			clueRoll -= clue[1];
-		}
-		if (!gotClue && roll(1000)) {
-			loot.add('Clue scroll (beginner)');
-			gotClue = true;
 		}
 	}
 	if (skill === SkillsEnum.Woodcutting) {

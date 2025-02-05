@@ -29,7 +29,8 @@ export const nexTask: MinionTask = {
 			teamID: u[1],
 			contribution: u[2],
 			deaths: u[3],
-			fake: u[4]
+			fake: u[4],
+			eliteCA: u[5]
 		}));
 
 		const loot = handleNexKills({

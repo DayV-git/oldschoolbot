@@ -68,7 +68,7 @@ export const finishables: Finishable[] = [
 		name: 'Chambers of Xeric (Solo, Non-CM)',
 		aliases: ['cox', 'raid1', 'raids1', 'chambers', 'xeric'],
 		cl: chambersOfXericNormalCL,
-		kill: () => ChambersOfXeric.complete({ team: [{ id: '1', personalPoints: 25_000 }] })['1']
+		kill: () => ChambersOfXeric.complete({ team: [{ id: '1', personalPoints: 25_000, eliteCA: false }] })['1']
 	},
 	{
 		name: 'Chambers of Xeric (Solo, CM)',
@@ -77,7 +77,15 @@ export const finishables: Finishable[] = [
 		kill: () =>
 			ChambersOfXeric.complete({
 				challengeMode: true,
-				team: [{ id: '1', personalPoints: 25_000, canReceiveAncientTablet: true, canReceiveDust: true }],
+				team: [
+					{
+						id: '1',
+						personalPoints: 25_000,
+						canReceiveAncientTablet: true,
+						canReceiveDust: true,
+						eliteCA: false
+					}
+				],
 				timeToComplete: 1
 			})['1'],
 		tertiaryDrops: [
@@ -92,7 +100,10 @@ export const finishables: Finishable[] = [
 		name: 'Theatre of Blood (Solo, Non-HM)',
 		aliases: ['tob', 'theatre of blood'],
 		cl: theatreOfBLoodNormalCL,
-		kill: () => new Bank(TheatreOfBlood.complete({ hardMode: false, team: [{ id: '1', deaths: [] }] }).loot['1']),
+		kill: () =>
+			new Bank(
+				TheatreOfBlood.complete({ hardMode: false, team: [{ id: '1', deaths: [], eliteCA: false }] }).loot['1']
+			),
 		tertiaryDrops: [
 			{ itemId: itemID('Sinhaza shroud tier 1'), kcNeeded: 100 },
 			{ itemId: itemID('Sinhaza shroud tier 2'), kcNeeded: 500 },
@@ -105,7 +116,10 @@ export const finishables: Finishable[] = [
 		name: 'Theatre of Blood (Solo, HM)',
 		aliases: ['tob hard', 'tob hard mode', 'tobhm'],
 		cl: theatreOfBLoodCL,
-		kill: () => new Bank(TheatreOfBlood.complete({ hardMode: true, team: [{ id: '1', deaths: [] }] }).loot['1']),
+		kill: () =>
+			new Bank(
+				TheatreOfBlood.complete({ hardMode: true, team: [{ id: '1', deaths: [], eliteCA: false }] }).loot['1']
+			),
 		tertiaryDrops: [
 			{ itemId: itemID('Sinhaza shroud tier 1'), kcNeeded: 100 },
 			{ itemId: itemID('Sinhaza shroud tier 2'), kcNeeded: 500 },
@@ -118,13 +132,15 @@ export const finishables: Finishable[] = [
 		name: 'The Nightmare',
 		aliases: ['nightmare'],
 		cl: theNightmareNormalCL,
-		kill: () => new Bank(Nightmare.kill({ isPhosani: false, team: [{ id: '1', damageDone: 2400 }] })['1'])
+		kill: () =>
+			new Bank(Nightmare.kill({ isPhosani: false, team: [{ id: '1', damageDone: 2400, eliteCA: false }] })['1'])
 	},
 	{
 		name: "Phosani's Nightmare",
 		aliases: ['phosani'],
 		cl: theNightmareCL,
-		kill: () => new Bank(Nightmare.kill({ isPhosani: true, team: [{ id: '1', damageDone: 2400 }] })['1'])
+		kill: () =>
+			new Bank(Nightmare.kill({ isPhosani: true, team: [{ id: '1', damageDone: 2400, eliteCA: false }] })['1'])
 	},
 	{
 		name: 'Gauntlet',
@@ -144,7 +160,10 @@ export const finishables: Finishable[] = [
 		aliases: [],
 		cl: NexCL,
 		kill: () =>
-			handleNexKills({ quantity: 1, team: [{ id: '1', teamID: 1, contribution: 100, deaths: [] }] }).get('1')
+			handleNexKills({
+				quantity: 1,
+				team: [{ id: '1', teamID: 1, contribution: 100, deaths: [], eliteCA: false }]
+			}).get('1')
 	},
 	{
 		name: 'Wintertodt (500pt crates, Max stats)',
@@ -172,7 +191,7 @@ export const finishables: Finishable[] = [
 		name: 'Tempoross',
 		cl: temporossCL,
 		aliases: ['temp', 'ross', 'tempo', 'watertodt'],
-		kill: () => getTemporossLoot(1, 99, new Bank()),
+		kill: () => getTemporossLoot(1, 99, new Bank(), {}),
 		tertiaryDrops: [
 			{ itemId: itemID('Spirit angler top'), kcNeeded: 65 },
 			{ itemId: itemID('Spirit angler waders'), kcNeeded: 65 },
@@ -265,7 +284,12 @@ export const finishables: Finishable[] = [
 				const key = getOSItem(`${tier} key red`);
 				const lock = getOSItem(`${tier} locks`);
 				if (accumulatedLoot.has(lock.id) && tier !== 'Gold') continue;
-				return openShadeChest({ item: key, allItemsOwned: accumulatedLoot, qty: totalRuns }).bank;
+				return openShadeChest({
+					item: key,
+					allItemsOwned: accumulatedLoot,
+					qty: totalRuns,
+					lootTableOptions: {}
+				}).bank;
 			}
 			throw new Error('Not possible!');
 		}

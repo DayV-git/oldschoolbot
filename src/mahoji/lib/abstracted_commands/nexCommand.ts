@@ -110,7 +110,7 @@ export async function nexCommand(
 		type: 'Nex',
 		leader: user.id,
 		users: effectiveTeam.map(i => i.id),
-		teamDetails: details.team.map(i => [i.id, i.teamID, i.contribution, i.deaths, i.fake]),
+		teamDetails: details.team.map(i => [i.id, i.teamID, i.contribution, i.deaths, i.fake, i.eliteCA]),
 		fakeDuration: details.fakeDuration,
 		quantity: details.quantity,
 		wipedKill: details.wipedKill

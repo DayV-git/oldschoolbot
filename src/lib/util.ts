@@ -402,12 +402,18 @@ export function checkRangeGearWeapon(gear: Gear) {
 export function normalizeTOAUsers(data: TOAOptions) {
 	const _detailedUsers = data.detailedUsers;
 	const detailedUsers = (
-		(Array.isArray(_detailedUsers[0]) ? _detailedUsers : [_detailedUsers]) as [string, number, number[]][][]
+		(Array.isArray(_detailedUsers[0]) ? _detailedUsers : [_detailedUsers]) as [
+			string,
+			number,
+			number[],
+			boolean
+		][][]
 	).map(userArr =>
 		userArr.map(user => ({
 			id: user[0],
 			points: user[1],
-			deaths: user[2]
+			deaths: user[2],
+			eliteCA: user[3]
 		}))
 	);
 	return detailedUsers;

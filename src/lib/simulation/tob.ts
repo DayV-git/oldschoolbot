@@ -1,6 +1,6 @@
 import { SimpleTable } from '@oldschoolgg/toolkit/structures';
 import { percentChance, roll, sumArr } from 'e';
-import { Bank, LootTable } from 'oldschooljs';
+import { Bank, LootTable, tertiaryItemChanges } from 'oldschooljs';
 import type { LootBank } from 'oldschooljs/dist/meta/types';
 import { JSONClone } from 'oldschooljs/dist/util';
 
@@ -13,6 +13,7 @@ interface TeamMember {
 	 * The rooms they died in.
 	 */
 	deaths: number[];
+	eliteCA: boolean;
 }
 
 interface TheatreOfBloodOptions {
@@ -82,6 +83,10 @@ const NonUniqueTable = new LootTable()
 	.add('Yew seed', 3)
 	.add('Magic seed', 3);
 
+const ClueTable = new LootTable().tertiary(8, 'Clue scroll (elite)');
+
+const HardClueTable = new LootTable().tertiary(7, 'Clue scroll (elite)');
+
 const HardModeExtraTable = new LootTable()
 	.tertiary(275, 'Sanguine dust')
 	.tertiary(150, 'Sanguine ornament kit')
@@ -94,11 +99,21 @@ class TheatreOfBloodClass {
 		}
 
 		const loot = new Bank();
+		const lootOptions = {
+			tertiaryItemPercentageChanges: tertiaryItemChanges(false, false, false, [
+				{ tier: 'elite', completed: member.eliteCA }
+			])
+		};
 		for (let i = 0; i < 3; i++) {
-			loot.add(NonUniqueTable.roll());
+			loot.add(NonUniqueTable.roll(1, lootOptions));
+
+			if (isHardMode) {
+				loot.add(HardClueTable.roll(1, lootOptions));
+			} else {
+				loot.add(ClueTable.roll(1, lootOptions));
+			}
 		}
 
-		let clueRate = 3 / 25;
 		if (isHardMode) {
 			// Add 15% extra regular loot for hard mode:
 			for (const [item] of loot.items()) {
@@ -106,12 +121,6 @@ class TheatreOfBloodClass {
 			}
 			// Add HM Tertiary drops: dust / kits
 			loot.add(HardModeExtraTable.roll());
-
-			clueRate = 3.5 / 25;
-		}
-
-		if (Math.random() < clueRate) {
-			loot.add('Clue scroll (elite)');
 		}
 
 		let petChance = isHardMode ? 500 : 650;
@@ -120,6 +129,11 @@ class TheatreOfBloodClass {
 		}
 		if (roll(petChance)) {
 			loot.add("Lil' zik");
+		}
+
+		//max 1 elite per raid
+		if (loot.has('Clue scroll (elite)')) {
+			loot.set('Clue scroll (elite)', 1);
 		}
 
 		return loot;
@@ -145,6 +159,7 @@ class TheatreOfBloodClass {
 		const parsedTeam: ParsedMember[] = _options.team.map(t => ({
 			id: t.id,
 			deaths: t.deaths,
+			eliteCA: t.eliteCA,
 			numDeaths: t.deaths.length,
 			points: maxPointsPerPerson - t.deaths.length * penaltyForDeath
 		}));

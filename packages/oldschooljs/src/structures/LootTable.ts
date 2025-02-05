@@ -18,6 +18,35 @@ export function roll(upperLimit: number): boolean {
 	return randInt(1, upperLimit) === 1;
 }
 
+export function tertiaryItemChanges(
+	hasRingOfWealthI = false,
+	inWildy = false,
+	onTask = false,
+	tiers: { tier: string; completed: boolean }[] = []
+) {
+	const changes = new Map<string, number>();
+
+	for (const { tier, completed } of tiers) {
+		let change = hasRingOfWealthI && inWildy ? 50 : 0;
+		if (completed) {
+			change += 5;
+		}
+		changes.set(`Clue scroll (${tier})`, change);
+	}
+
+	if (inWildy) changes.set('Giant key', 50);
+
+	if (inWildy && !onTask) {
+		changes.set('Mossy key', 60);
+	} else if (!inWildy && onTask) {
+		changes.set('Mossy key', 66.67);
+	} else if (inWildy && onTask) {
+		changes.set('Mossy key', 77.6);
+	}
+
+	return changes;
+}
+
 export interface LootTableOptions {
 	limit?: number;
 }
@@ -200,8 +229,8 @@ export default class LootTable {
 
 	private cachedOptimizedTable: number[] | null = null;
 	roll(quantity?: number): Bank;
-	roll(quantity: number, options: { targetBank?: undefined } & LootTableRollOptions): Bank;
-	roll(quantity: number, options: { targetBank: Bank } & LootTableRollOptions): null;
+	roll(quantity: number, options?: LootTableRollOptions): Bank;
+	roll(quantity: number, options?: LootTableRollOptions): null;
 	public roll(quantity = 1, options: LootTableRollOptions = {}): Bank | null {
 		const loot = options.targetBank ?? new Bank();
 		const effectiveTertiaryItems = options.tertiaryItemPercentageChanges
@@ -212,7 +241,7 @@ export default class LootTable {
 					if (!change) return i;
 					return {
 						...i,
-						chance: Math.ceil(reduceNumByPercent(i.chance, change))
+						chance: Math.floor(reduceNumByPercent(i.chance, change))
 					};
 				})
 			: this.tertiaryItems;
@@ -232,24 +261,28 @@ export default class LootTable {
 
 		outerLoop: for (let i = 0; i < quantity; i++) {
 			for (let j = 0; j < this.everyItems.length; j++) {
-				this.addResultToLoot(this.everyItems[j], loot);
+				this.addResultToLoot(this.everyItems[j], loot, options.tertiaryItemPercentageChanges);
 			}
 
 			for (let j = 0; j < effectiveTertiaryItems.length; j++) {
 				if (roll(effectiveTertiaryItems[j].chance)) {
-					this.addResultToLoot(effectiveTertiaryItems[j], loot);
+					this.addResultToLoot(effectiveTertiaryItems[j], loot, options.tertiaryItemPercentageChanges);
 				}
 			}
 
 			for (let j = 0; j < this.oneInItems.length; j++) {
 				if (roll(this.oneInItems[j].chance)) {
-					this.addResultToLoot(this.oneInItems[j], loot);
+					this.addResultToLoot(this.oneInItems[j], loot, options.tertiaryItemPercentageChanges);
 					continue outerLoop;
 				}
 			}
 
 			if (this.cachedOptimizedTable) {
-				this.addResultToLoot(this.table[randArrItem(this.cachedOptimizedTable)], loot);
+				this.addResultToLoot(
+					this.table[randArrItem(this.cachedOptimizedTable)],
+					loot,
+					options.tertiaryItemPercentageChanges
+				);
 			} else {
 				const randomWeight = randFloat(0, limit);
 				let weight = 0;
@@ -269,7 +302,11 @@ export default class LootTable {
 		return null;
 	}
 
-	private addResultToLoot(result: LootTableItem, loot: Bank): void {
+	private addResultToLoot(
+		result: LootTableItem,
+		loot: Bank,
+		tertiaryItemPercentageChanges?: Map<string, number>
+	): void {
 		if (typeof result?.item === 'number') {
 			loot.addItem(result.item, this.determineQuantity(result.quantity));
 			return;
@@ -277,8 +314,9 @@ export default class LootTable {
 
 		if (result?.item instanceof LootTable) {
 			const qty = this.determineQuantity(result.quantity);
-			if (result.options?.multiply) loot.add(result.item.roll(1).multiply(qty));
-			else result.item.roll(qty, { targetBank: loot });
+			if (result.options?.multiply)
+				loot.add(result.item.roll(1, { tertiaryItemPercentageChanges }).multiply(qty));
+			else result.item.roll(qty, { targetBank: loot, tertiaryItemPercentageChanges });
 			return;
 		}
 	}

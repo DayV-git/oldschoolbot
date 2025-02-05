@@ -24,6 +24,7 @@ export interface TeamMember {
 	 * https://twitter.com/JagexAsh/status/1050349088124952576.
 	 */
 	canReceiveDust?: boolean;
+	eliteCA?: boolean;
 }
 
 export interface ChambersOfXericOptions {
@@ -175,7 +176,8 @@ export class ChambersOfXericClass extends Minigame {
 	}
 
 	// We're rolling 2 non-unique loots based off a number of personal points.
-	public rollNonUniqueLoot(personalPoints: number): ItemBank {
+	public rollNonUniqueLoot(member: TeamMember): ItemBank {
+		const personalPoints = member.personalPoints;
 		// First, pick which items we will be giving them, without giving a duplicate.
 		const items: number[] = [];
 		while (items.length < 2) {
@@ -190,7 +192,7 @@ export class ChambersOfXericClass extends Minigame {
 			[items[1]]: Math.max(1, Math.floor(personalPoints / itemScales[items[1]]))
 		};
 
-		if (roll(12)) {
+		if (roll(member.eliteCA ? 11 : 12)) {
 			loot[itemID('Clue scroll (elite)')] = 1;
 		}
 
@@ -265,11 +267,9 @@ export class ChambersOfXericClass extends Minigame {
 		// unique decider table, give them a non-unique roll.
 		for (const leftOverRecipient of uniqueDeciderTable.table) {
 			// Find this member in the team, and get their points.
-			const pointsOfThisMember = options.team.find(
-				member => member.id === leftOverRecipient.item
-			)!.personalPoints;
+			const member = options.team.find(member => member.id === leftOverRecipient.item)!;
 
-			const entries = Object.entries(this.rollNonUniqueLoot(pointsOfThisMember));
+			const entries = Object.entries(this.rollNonUniqueLoot(member));
 			for (const [itemID, quantity] of entries) {
 				lootResult[leftOverRecipient.item].add(Number.parseInt(itemID), quantity);
 			}

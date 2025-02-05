@@ -485,12 +485,13 @@ export interface ColoTaskOptions extends ActivityTaskOptions {
 type UserID = string;
 type Points = number;
 type RoomIDsDiedAt = number[];
+type eliteCA = boolean;
 
-type TOAUser = [UserID, Points[], RoomIDsDiedAt[]];
+type TOAUser = [UserID, Points[], RoomIDsDiedAt[], eliteCA];
 export interface TOAOptions extends ActivityTaskOptionsWithUsers {
 	type: 'TombsOfAmascut';
 	leader: string;
-	detailedUsers: TOAUser[] | [UserID, Points, RoomIDsDiedAt][][];
+	detailedUsers: TOAUser[] | [UserID, Points, RoomIDsDiedAt, eliteCA][][];
 	raidLevel: RaidLevel;
 	fakeDuration: number;
 	wipedRoom: null | number | (number | null)[];
@@ -501,7 +502,7 @@ export interface NexTaskOptions extends ActivityTaskOptionsWithUsers {
 	type: 'Nex';
 	quantity: number;
 	leader: string;
-	teamDetails: [string, number, number, number[], boolean][];
+	teamDetails: [string, number, number, number[], boolean, boolean][];
 	fakeDuration: number;
 	wipedKill: number | null;
 }

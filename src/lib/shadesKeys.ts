@@ -2,13 +2,15 @@ import { roll } from 'e';
 import { Bank, type Item, LootTable } from 'oldschooljs';
 
 import { resolveItems } from 'oldschooljs/dist/util/util';
+import type { LootTableRollOptions } from '../../packages/oldschooljs/dist/structures/LootTable';
 import type { UnifiedOpenable } from './openables';
 import getOSItem from './util/getOSItem';
 
-const BronzeChest = new LootTable({ limit: 99 })
+const BronzeChest = new LootTable({ limit: 98 })
 	.every('Swamp paste', [10, 20])
 	.tertiary(63, 'Bronze locks')
 	.tertiary(4, 'Coins', [1, 270])
+	.tertiary(50, 'Clue scroll (easy)')
 	.oneIn(3000, 'Steel longsword')
 	.oneIn(3000, 'Black spear')
 	.add('Steel axe', 1, 6)
@@ -30,7 +32,6 @@ const BronzeChest = new LootTable({ limit: 99 })
 	.add('Steel med helm', 1, 5)
 	.add('Gold bar', 3, 5)
 	.add('Mithril bar', 3, 5)
-	.add('Clue scroll (easy)', 1, 2)
 	.add('Sapphire ring', 1, 2);
 
 const SplitBarkScrollsTable = new LootTable()
@@ -39,10 +40,11 @@ const SplitBarkScrollsTable = new LootTable()
 	.add('Bloody notes')
 	.add('Runescroll of bloodbark');
 
-const SteelChest = new LootTable({ limit: 134 })
+const SteelChest = new LootTable({ limit: 133 })
 	.tertiary(597, SplitBarkScrollsTable)
 	.tertiary(62, 'Fine cloth')
 	.tertiary(63, 'Steel locks')
+	.tertiary(45, 'Clue scroll (medium)')
 	.every('Swamp paste', [15, 30])
 	.add('Coins', [1, 700])
 	.add('Black scimitar', 1, 10)
@@ -70,12 +72,12 @@ const SteelChest = new LootTable({ limit: 134 })
 	.add('Willow logs', [5, 14], 10)
 	.add('Adamantite bar', 3, 6)
 	.add('Amulet of strength', 1, 6)
-	.add('Clue scroll (medium)', 1, 3)
 	.add('Emerald ring', 1, 2);
 
-const BlackChest = new LootTable({ limit: 140 })
+const BlackChest = new LootTable({ limit: 139 })
 	.tertiary(61, 'Black locks')
 	.tertiary(61, SplitBarkScrollsTable)
+	.tertiary(35, 'Clue scroll (medium)')
 	.every('Swamp paste', [25, 40])
 	.add('Coins', [1, 1000])
 	.add('Staff of air', 1, 1)
@@ -114,17 +116,16 @@ const BlackChest = new LootTable({ limit: 140 })
 	.add('Death rune', [10, 29], 4.4)
 	.add('Willow logs', [5, 14], 9)
 	.add('Yew logs', [5, 14], 6)
-	.add('Clue scroll (medium)', 1, 4)
 	.add('Flamtaer hammer', 1, 1);
 
-const SilverChest = new LootTable({ limit: 154 })
+const SilverChest = new LootTable({ limit: 153 })
 	.tertiary(61, 'Silver locks')
 	.tertiary(54, SplitBarkScrollsTable)
+	.tertiary(76, 'Clue scroll (hard)')
 	.every('Swamp paste', [25, 40])
 	.add('Fine cloth', 1, 16)
 	.add('Flamtaer hammer', 1, 11)
 	.add('Amulet of the damned (full)', 1, 10)
-	.add('Clue scroll (hard)', 1, 2)
 	.add('Adamant spear', 1, 11)
 	.add('Adamant spear(p)', 1, 11)
 	.add('Battlestaff', 1, 9)
@@ -155,11 +156,11 @@ const SilverChest = new LootTable({ limit: 154 })
 	.add('Magic logs', [5, 10], 2)
 	.add('Coins', [1, 2326]);
 
-const GoldChest = new LootTable({ limit: 143 })
+const GoldChest = new LootTable({ limit: 142 })
 	.every('Swamp paste', [40, 70])
 	.tertiary(61, 'Gold locks')
 	.tertiary(54, SplitBarkScrollsTable)
-
+	.tertiary(139, 'Clue scroll (elite)')
 	.add('Battlestaff', 3, 11)
 	.add('Adamant spear', 1, 7)
 	.add('Adamant spear(p)', 1, 6)
@@ -193,7 +194,6 @@ const GoldChest = new LootTable({ limit: 143 })
 	.add('Dragonstone ring', 1, 3)
 	.add('Redwood logs', [5, 14], 2)
 	.add('Dragonstone', 1, 2)
-	.add('Clue scroll (elite)', 1, 1)
 	.add('Coins', [1, 3160]);
 
 const chests = [
@@ -255,14 +255,19 @@ export const zealOutfit = resolveItems([
 	"Zealot's robe top"
 ]);
 
-export function openShadeChest({ item, qty, allItemsOwned }: { allItemsOwned: Bank; item: Item; qty: number }) {
+export function openShadeChest({
+	item,
+	qty,
+	allItemsOwned,
+	lootTableOptions
+}: { allItemsOwned: Bank; item: Item; qty: number; lootTableOptions: LootTableRollOptions }) {
 	const chest = chests.find(i => i.items.includes(item.id));
 	if (!chest) throw new Error(`No chest found for item ${item.name}.`);
 	const loot = new Bank();
 	const effectiveOwnedItems = allItemsOwned.clone();
 
 	for (let i = 0; i < qty; i++) {
-		const thisLoot = chest.table.roll();
+		const thisLoot = chest.table.roll(1, lootTableOptions);
 		if (!effectiveOwnedItems.has('Flamtaer bag') && roll(2)) {
 			thisLoot.add('Flamtaer bag');
 		}
@@ -295,7 +300,8 @@ for (const chest of chests) {
 				openShadeChest({
 					item: args.self.openedItem,
 					allItemsOwned: args.user.allItemsOwned,
-					qty: args.quantity
+					qty: args.quantity,
+					lootTableOptions: args.lootTableOptions
 				}),
 			allItems: chest.table.allItems
 		});

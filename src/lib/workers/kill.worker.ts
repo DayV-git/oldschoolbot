@@ -23,6 +23,7 @@ export default async ({
 	lootTableTertiaryChanges
 }: KillWorkerArgs): KillWorkerReturn => {
 	const osjsMonster = Monsters.find(mon => mon.aliases.some(alias => stringMatches(alias, bossName)));
+	const tertiaryItemPercentageChanges = new Map(lootTableTertiaryChanges);
 	if (osjsMonster) {
 		if (quantity > limit) {
 			return {
@@ -36,7 +37,7 @@ export default async ({
 				onSlayerTask: onTask,
 				slayerMaster: slayerMaster,
 				lootTableOptions: {
-					tertiaryItemPercentageChanges: new Map(lootTableTertiaryChanges)
+					tertiaryItemPercentageChanges
 				}
 			})
 		};
@@ -66,7 +67,15 @@ export default async ({
 			return { error: 'I can only kill a maximum of 10k nightmares a time!' };
 		}
 		for (let i = 0; i < quantity; i++) {
-			bank.add(Misc.Nightmare.kill({ team: [{ damageDone: 2400, id: 'id' }], isPhosani: false }).id);
+			bank.add(
+				Misc.Nightmare.kill({
+					team: [{ damageDone: 2400, id: 'id', eliteCA: false }], // elite CA is handled in tertiary changes here
+					isPhosani: false,
+					lootTableOptions: {
+						tertiaryItemPercentageChanges
+					}
+				}).id
+			);
 		}
 		return { bank: bank.toJSON() };
 	}
@@ -79,11 +88,14 @@ export default async ({
 		const loot = handleNexKills({
 			quantity,
 			team: [
-				{ id: '1', teamID: 1, contribution: 100, deaths: [] },
-				{ id: '2', teamID: 2, contribution: 100, deaths: [] },
-				{ id: '3', teamID: 3, contribution: 100, deaths: [] },
-				{ id: '4', teamID: 4, contribution: 100, deaths: [] }
-			]
+				{ id: '1', teamID: 1, contribution: 100, deaths: [], eliteCA: false },
+				{ id: '2', teamID: 2, contribution: 100, deaths: [], eliteCA: false },
+				{ id: '3', teamID: 3, contribution: 100, deaths: [], eliteCA: false },
+				{ id: '4', teamID: 4, contribution: 100, deaths: [], eliteCA: false }
+			],
+			lootTableTertiaryChanges: {
+				tertiaryItemPercentageChanges
+			}
 		});
 		return {
 			bank: loot.get('1').toJSON(),

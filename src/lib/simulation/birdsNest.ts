@@ -43,3 +43,11 @@ export const strungRabbitFootNestTable = new LootTable()
 	.add(eggNest, 1, 3)
 	.add(ringNests, 1, 32)
 	.add(treeSeedsNest, 1, 60);
+
+export const clueNestTable = new LootTable()
+
+	.tertiary(50, new LootTable().every(birdsNestID).every('Clue scroll (beginner)'))
+	.tertiary(375, new LootTable().every(birdsNestID).every('Clue scroll (easy)'))
+	.tertiary(500, new LootTable().every(birdsNestID).every('Clue scroll (medium)'))
+	.tertiary(750, new LootTable().every(birdsNestID).every('Clue scroll (hard)'))
+	.tertiary(1500, new LootTable().every(birdsNestID).every('Clue scroll (elite)'));

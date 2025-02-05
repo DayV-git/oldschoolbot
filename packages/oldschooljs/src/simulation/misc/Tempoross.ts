@@ -1,5 +1,5 @@
 import Bank from '../../structures/Bank';
-import LootTable from '../../structures/LootTable';
+import LootTable, { type LootTableRollOptions } from '../../structures/LootTable';
 
 const replaceItems = ['Fish barrel', 'Tackle box', 'Big harpoonfish', 'Tiny tempor'];
 
@@ -50,9 +50,9 @@ const PoolCasketTable = new LootTable()
 	.add('Loop half of key', 9, 1)
 	.add('Tooth half of key', 9, 1)
 	.add('Coins', [25_000, 50_000], 1)
-	.add('Clue scroll (easy)', 1, 12)
-	.add('Clue scroll (medium)', 1, 7)
-	.add('Clue scroll (hard)', 1, 5);
+	.tertiary(20, 'Clue scroll (easy)')
+	.tertiary(33, 'Clue scroll (medium)')
+	.tertiary(50, 'Clue scroll (hard)');
 
 const fishTables = [
 	[
@@ -130,11 +130,13 @@ const fishTables = [
 export function Tempoross({
 	quantity,
 	fishingLevel,
-	userBank
+	userBank,
+	lootTableOptions
 }: {
 	quantity: number;
 	fishingLevel: number;
 	userBank: Bank;
+	lootTableOptions: LootTableRollOptions;
 }) {
 	const loot = new Bank();
 	const lootTable = new LootTable()
@@ -162,12 +164,13 @@ export function Tempoross({
 	}
 
 	for (let index = 0; index < quantity; index++) {
-		const newItem = lootTable.roll();
-		if (replaceItems.includes(newItem.items()[0][0].name) && userBank.has(newItem)) {
-			loot.add('Soaked page', 25);
-		} else {
-			loot.add(newItem);
+		const newloot = lootTable.roll(1, lootTableOptions);
+		const replaceItem = replaceItems.find(i => i === newloot.items()[0][0].name);
+		if (replaceItem && userBank.has(replaceItem)) {
+			newloot.add('Soaked page', 25);
+			newloot.remove(replaceItem);
 		}
+		loot.add(newloot);
 	}
 
 	return loot;
