@@ -10,7 +10,7 @@ import Openables from './simulation/openables/index';
 import Bank from './structures/Bank';
 import Hiscores from './structures/Hiscores';
 import Items from './structures/Items';
-import LootTable from './structures/LootTable';
+import LootTable, { tertiaryItemChanges, LootTableRollOptions } from './structures/LootTable';
 import Player from './structures/Player';
 import SimpleMonster from './structures/SimpleMonster';
 import SimpleOpenable from './structures/SimpleOpenable';
@@ -24,6 +24,8 @@ export {
 	Hiscores,
 	Items,
 	LootTable,
+	tertiaryItemChanges,
+	LootTableRollOptions,
 	Misc,
 	type MonsterKillOptions,
 	Monsters,

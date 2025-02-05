@@ -24,7 +24,9 @@ export const temporossTask: MinionTask = {
 		if (rewardBoost > 0) {
 			rewardTokens = Math.ceil(increaseNumByPercent(rewardTokens, rewardBoost));
 		}
-		const loot = getTemporossLoot(rewardTokens, currentLevel, user.bank);
+		const loot = getTemporossLoot(rewardTokens, currentLevel, user.bank, {
+			tertiaryItemPercentageChanges: user.buildTertiaryItemChanges()
+		});
 
 		if (loot.has('Tiny tempor')) {
 			globalClient.emit(

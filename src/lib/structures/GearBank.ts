@@ -1,5 +1,6 @@
 import type { Bank } from 'oldschooljs';
 
+import { CombatAchievements } from '../combat_achievements/combatAchievements';
 import { getSimilarItems } from '../data/similarItems';
 import type { UserFullGearSetup } from '../gear/types';
 import type { Skills, SkillsRequired } from '../types';
@@ -12,25 +13,29 @@ export class GearBank {
 	skillsAsLevels: SkillsRequired;
 	skillsAsXP: SkillsRequired;
 	chargeBank: ChargeBank;
+	caPoints?: number;
 
 	constructor({
 		gear,
 		bank,
 		skillsAsLevels,
 		chargeBank,
-		skillsAsXP
+		skillsAsXP,
+		caPoints
 	}: {
 		gear: UserFullGearSetup;
 		bank: Bank;
 		skillsAsLevels: SkillsRequired;
 		chargeBank: ChargeBank;
 		skillsAsXP: SkillsRequired;
+		caPoints?: number;
 	}) {
 		this.gear = gear;
 		this.bank = bank;
 		this.skillsAsLevels = skillsAsLevels;
 		this.chargeBank = chargeBank;
 		this.skillsAsXP = skillsAsXP;
+		this.caPoints = caPoints;
 	}
 
 	wildyGearCheck(item: string | number, isWildy: boolean) {
@@ -69,5 +74,9 @@ export class GearBank {
 
 	hasSkillReqs(reqs: Skills) {
 		return hasSkillReqsRaw(this.skillsAsLevels, reqs);
+	}
+
+	hasCompletedCATier(tier: keyof typeof CombatAchievements): boolean {
+		return (this.caPoints ?? 0) >= CombatAchievements[tier].rewardThreshold;
 	}
 }

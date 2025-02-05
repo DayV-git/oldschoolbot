@@ -52,6 +52,7 @@ export const cyclopsTask: MinionTask = {
 		const userBank = user.bank;
 
 		const loot = new Bank();
+		const lootTableOptions = { tertiaryItemPercentageChanges: user.buildTertiaryItemChanges() };
 
 		for (let i = 0; i < quantity; i++) {
 			const highestDefenderOwned = defenders.find(
@@ -67,7 +68,7 @@ export const cyclopsTask: MinionTask = {
 			if (roll(possibleDefenderToDrop.rollChance)) {
 				loot.add(possibleDefenderToDrop.itemID);
 			}
-			loot.add(CyclopsTable.roll());
+			loot.add(CyclopsTable.roll(1, lootTableOptions));
 		}
 
 		const { previousCL, itemsAdded } = await transactItems({

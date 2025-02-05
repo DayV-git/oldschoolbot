@@ -2,7 +2,7 @@ import { cleanUsername, mentionCommand } from '@oldschoolgg/toolkit/util';
 import type { GearSetupType, Prisma, User, UserStats, xp_gains_skill_enum } from '@prisma/client';
 import { userMention } from 'discord.js';
 import { calcWhatPercent, percentChance, sumArr, uniqueArr } from 'e';
-import { Bank } from 'oldschooljs';
+import { Bank, tertiaryItemChanges } from 'oldschooljs';
 
 import { EquipmentSlot, type Item } from 'oldschooljs/dist/meta/types';
 
@@ -149,7 +149,8 @@ export class MUserClass {
 			bank: this.bank,
 			skillsAsLevels: this.skillsAsLevels,
 			chargeBank: this.ownedChargeBank(),
-			skillsAsXP: this.skillsAsXP
+			skillsAsXP: this.skillsAsXP,
+			caPoints: this.caPoints()
 		});
 	}
 
@@ -745,28 +746,11 @@ Charge your items using ${mentionCommand(globalClient, 'minion', 'charge')}.`
 	}
 
 	buildTertiaryItemChanges(hasRingOfWealthI = false, inWildy = false, onTask = false) {
-		const changes = new Map<string, number>();
-
-		const tiers = Object.keys(CombatAchievements) as Array<keyof typeof CombatAchievements>;
-		for (const tier of tiers) {
-			let change = hasRingOfWealthI && inWildy ? 50 : 0;
-			if (this.hasCompletedCATier(tier)) {
-				change += 5;
-			}
-			changes.set(`Clue scroll (${tier})`, change);
-		}
-
-		if (inWildy) changes.set('Giant key', 50);
-
-		if (inWildy && !onTask) {
-			changes.set('Mossy key', 60);
-		} else if (!inWildy && onTask) {
-			changes.set('Mossy key', 66.67);
-		} else if (inWildy && onTask) {
-			changes.set('Mossy key', 77.6);
-		}
-
-		return changes;
+		const tiers = (Object.keys(CombatAchievements) as Array<keyof typeof CombatAchievements>).map(tier => ({
+			tier: tier,
+			completed: this.hasCompletedCATier(tier)
+		}));
+		return tertiaryItemChanges(hasRingOfWealthI, inWildy, onTask, tiers);
 	}
 
 	ownedChargeBank() {

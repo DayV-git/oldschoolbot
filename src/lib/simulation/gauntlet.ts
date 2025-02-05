@@ -1,4 +1,5 @@
 import { LootTable } from 'oldschooljs';
+import type { LootTableRollOptions } from '../../../packages/oldschooljs/dist/structures/LootTable';
 
 const DiedTable = new LootTable()
 	.add('Adamant dagger')
@@ -117,7 +118,11 @@ interface NormalGauntletOptions {
 	type: 'normal' | 'corrupted';
 }
 
-export function gauntlet({ died, type }: NormalGauntletOptions) {
-	const loot = died ? DiedTable.roll() : type === 'normal' ? StandardTable.roll() : CorruptedTable.roll();
+export function gauntlet({ died, type }: NormalGauntletOptions, lootTableOptions?: LootTableRollOptions) {
+	const loot = died
+		? DiedTable.roll(1, lootTableOptions)
+		: type === 'normal'
+			? StandardTable.roll(1, lootTableOptions)
+			: CorruptedTable.roll(1, lootTableOptions);
 	return loot;
 }

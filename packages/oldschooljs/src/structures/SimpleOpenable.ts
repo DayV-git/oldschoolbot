@@ -15,13 +15,11 @@ export default class SimpleOpenable extends Openable {
 		this.table = options.table;
 	}
 
-	public open(quantity = 1) {
+	public open(quantity = 1, lootTableOptions = {}): Bank {
 		const loot = new Bank();
-
 		for (let i = 0; i < quantity; i++) {
-			loot.add(this.table.roll());
+			loot.add(this.table.roll(1, lootTableOptions));
 		}
-
 		return loot;
 	}
 }

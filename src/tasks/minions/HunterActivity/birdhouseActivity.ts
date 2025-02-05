@@ -1,21 +1,21 @@
 import type { Prisma } from '@prisma/client';
-import { randFloat, roll } from 'e';
+import { percentChance } from 'e';
 import { Bank } from 'oldschooljs';
 
+import { ClueTiers } from '../../../lib/clues/clueTiers';
+import {
+	birdsNestID,
+	clueNestTable,
+	nestTable,
+	strungRabbitFootNestTable,
+	treeSeedsNest
+} from '../../../lib/simulation/birdsNest';
 import birdhouses from '../../../lib/skilling/skills/hunter/birdHouseTrapping';
 import type { BirdhouseData } from '../../../lib/skilling/skills/hunter/defaultBirdHouseTrap';
 import { SkillsEnum } from '../../../lib/skilling/types';
 import type { BirdhouseActivityTaskOptions } from '../../../lib/types/minions';
 import { handleTripFinish } from '../../../lib/util/handleTripFinish';
-import itemID from '../../../lib/util/itemID';
 import { sendToChannelID } from '../../../lib/util/webhook';
-
-const clues = [
-	[itemID('Clue scroll(elite)'), 1 / 10],
-	[itemID('Clue scroll(hard)'), 2 / 10],
-	[itemID('Clue scroll(medium)'), 3 / 10],
-	[itemID('Clue scroll(easy)'), 4 / 10]
-];
 
 export const birdHouseTask: MinionTask = {
 	type: 'Birdhouse',
@@ -70,35 +70,32 @@ export const birdHouseTask: MinionTask = {
 				str = `${user}, ${user.minionName} finished collecting 4x full ${birdhouseToCollect.name}.`;
 			}
 
+			hunterXP = birdhouseToCollect.huntXP * 4;
+			const hunterLevel = user.getSkills(true).hunter;
+			const seedNestChance = 0.8 * hunterLevel;
+			const nestChance = birdhouseToCollect.baseNestChance * (1 + Math.max(hunterLevel - 50, 0) / 49);
+			const lootTableOptions = { tertiaryItemPercentageChanges: user.buildTertiaryItemChanges() };
+			const allClues = ClueTiers.map(tier => tier.scrollID);
+
 			for (let i = 0; i < 4; i++) {
-				if (!roll(200)) continue;
-				let nextTier = false;
-				let gotClue = false;
-				for (const clue of clues) {
-					if (nextTier || randFloat(0, 1) <= clue[1]) {
-						if (user.bank.amount(clue[0]) >= 1 || loot.amount(clue[0]) >= 1) {
-							nextTier = true;
-							continue;
-						}
-						gotClue = true;
-						loot.add(clue[0]);
-						break;
-					}
+				loot.add(birdhouseToCollect.table.roll());
+				if (percentChance(seedNestChance)) {
+					loot.add(birdsNestID);
+					loot.add(treeSeedsNest.roll());
 				}
-				if (!gotClue && roll(1000)) {
-					loot.add('Clue scroll(beginner)');
+				for (let j = 0; j < 10; j++) {
+					if (percentChance(nestChance)) {
+						if (!allClues.some(id => loot.has(id))) {
+							loot.add(clueNestTable.roll(1, lootTableOptions));
+						} else if (strungRabbitFoot) {
+							loot.add(strungRabbitFootNestTable.roll());
+						} else {
+							loot.add(nestTable.roll());
+						}
+					}
 				}
 			}
 
-			hunterXP = birdhouseToCollect.huntXP * 4;
-			for (let i = 0; i < 4; i++) {
-				loot.add(birdhouseToCollect.table.roll());
-				if (strungRabbitFoot) {
-					loot.add(birdhouseToCollect.strungRabbitFootTable.roll());
-				} else {
-					loot.add(birdhouseToCollect.normalNestTable.roll());
-				}
-			}
 			await transactItems({
 				userID: user.id,
 				collectionLog: true,

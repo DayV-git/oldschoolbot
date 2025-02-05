@@ -2,7 +2,6 @@ import { Time } from 'e';
 import { Bank } from 'oldschooljs';
 import { LootTable } from 'oldschooljs';
 
-import { nestTable, strungRabbitFootNestTable } from '../../../simulation/birdsNest';
 import getOSItem from '../../../util/getOSItem';
 
 export interface Birdhouse {
@@ -15,12 +14,11 @@ export interface Birdhouse {
 	houseItemReq: Bank;
 	craftItemReq: Bank;
 	table: LootTable;
-	normalNestTable: LootTable;
-	strungRabbitFootTable: LootTable;
 	huntTechnique: string;
 	waitTime: number;
 	runTime: number;
 	qpRequired: number;
+	baseNestChance: number; //chance at lvl 1-50, goed up to double at 99
 }
 
 const birdhouses: Birdhouse[] = [
@@ -34,12 +32,11 @@ const birdhouses: Birdhouse[] = [
 		houseItemReq: new Bank().add('Bird house', 1),
 		craftItemReq: new Bank().add('Logs', 1),
 		table: new LootTable().every('Raw bird meat', [1, 5]).tertiary(3, 'Feather', [10, 100]),
-		normalNestTable: new LootTable().tertiary(2, nestTable),
-		strungRabbitFootTable: new LootTable().tertiary(2, strungRabbitFootNestTable),
 		huntTechnique: 'bird house trapping',
 		waitTime: 50 * Time.Minute,
 		runTime: 81 * Time.Second,
-		qpRequired: 3
+		qpRequired: 3,
+		baseNestChance: 5
 	},
 	{
 		name: 'Oak bird house',
@@ -51,12 +48,11 @@ const birdhouses: Birdhouse[] = [
 		houseItemReq: new Bank().add('Oak bird house', 1),
 		craftItemReq: new Bank().add('Oak logs', 1),
 		table: new LootTable().every('Raw bird meat', [1, 5]).tertiary(3, 'Feather', [10, 100]),
-		normalNestTable: new LootTable().tertiary(2, nestTable, [1, 2]),
-		strungRabbitFootTable: new LootTable().tertiary(2, strungRabbitFootNestTable, [1, 2]),
 		huntTechnique: 'bird house trapping',
 		waitTime: 50 * Time.Minute,
 		runTime: 81 * Time.Second,
-		qpRequired: 3
+		qpRequired: 3,
+		baseNestChance: 6.25
 	},
 	{
 		name: 'Willow bird house',
@@ -68,12 +64,11 @@ const birdhouses: Birdhouse[] = [
 		houseItemReq: new Bank().add('Willow bird house', 1),
 		craftItemReq: new Bank().add('Willow logs', 1),
 		table: new LootTable().every('Raw bird meat', [1, 5]).tertiary(3, 'Feather', [10, 100]),
-		normalNestTable: new LootTable().tertiary(2, nestTable, [1, 3]),
-		strungRabbitFootTable: new LootTable().tertiary(2, strungRabbitFootNestTable, [1, 3]),
 		huntTechnique: 'bird house trapping',
 		waitTime: 50 * Time.Minute,
 		runTime: 81 * Time.Second,
-		qpRequired: 3
+		qpRequired: 3,
+		baseNestChance: 6.4
 	},
 	{
 		name: 'Teak bird house',
@@ -85,12 +80,11 @@ const birdhouses: Birdhouse[] = [
 		houseItemReq: new Bank().add('Teak bird house', 1),
 		craftItemReq: new Bank().add('Teak logs', 1),
 		table: new LootTable().every('Raw bird meat', [1, 5]).tertiary(3, 'Feather', [10, 100]),
-		normalNestTable: new LootTable().tertiary(2, nestTable, [1, 4]),
-		strungRabbitFootTable: new LootTable().tertiary(2, strungRabbitFootNestTable, [1, 4]),
 		huntTechnique: 'bird house trapping',
 		waitTime: 50 * Time.Minute,
 		runTime: 81 * Time.Second,
-		qpRequired: 3
+		qpRequired: 3,
+		baseNestChance: 6.5
 	},
 	{
 		name: 'Maple bird house',
@@ -102,12 +96,11 @@ const birdhouses: Birdhouse[] = [
 		houseItemReq: new Bank().add('Maple bird house', 1),
 		craftItemReq: new Bank().add('Maple logs', 1),
 		table: new LootTable().every('Raw bird meat', [1, 5]).tertiary(3, 'Feather', [10, 100]),
-		normalNestTable: new LootTable().tertiary(2, nestTable, [1, 5]),
-		strungRabbitFootTable: new LootTable().tertiary(2, strungRabbitFootNestTable, [1, 5]),
 		huntTechnique: 'bird house trapping',
 		waitTime: 50 * Time.Minute,
 		runTime: 81 * Time.Second,
-		qpRequired: 3
+		qpRequired: 3,
+		baseNestChance: 7
 	},
 	{
 		name: 'Mahogany bird house',
@@ -119,12 +112,11 @@ const birdhouses: Birdhouse[] = [
 		houseItemReq: new Bank().add('Mahogany bird house', 1),
 		craftItemReq: new Bank().add('Mahogany logs', 1),
 		table: new LootTable().every('Raw bird meat', [1, 4]).tertiary(3, 'Feather', [10, 100]),
-		normalNestTable: new LootTable().tertiary(2, nestTable, [1, 6]),
-		strungRabbitFootTable: new LootTable().tertiary(2, strungRabbitFootNestTable, [1, 6]),
 		huntTechnique: 'bird house trapping',
 		waitTime: 50 * Time.Minute,
 		runTime: 81 * Time.Second,
-		qpRequired: 3
+		qpRequired: 3,
+		baseNestChance: 7.5
 	},
 	{
 		name: 'Yew bird house',
@@ -136,12 +128,11 @@ const birdhouses: Birdhouse[] = [
 		houseItemReq: new Bank().add('Yew bird house', 1),
 		craftItemReq: new Bank().add('Yew logs', 1),
 		table: new LootTable().every('Raw bird meat', [1, 4]).tertiary(3, 'Feather', [10, 100]),
-		normalNestTable: new LootTable().tertiary(2, nestTable, [1, 7]),
-		strungRabbitFootTable: new LootTable().tertiary(2, strungRabbitFootNestTable, [1, 7]),
 		huntTechnique: 'bird house trapping',
 		waitTime: 50 * Time.Minute,
 		runTime: 81 * Time.Second,
-		qpRequired: 3
+		qpRequired: 3,
+		baseNestChance: 8
 	},
 	{
 		name: 'Magic bird house',
@@ -153,12 +144,11 @@ const birdhouses: Birdhouse[] = [
 		houseItemReq: new Bank().add('Magic bird house', 1),
 		craftItemReq: new Bank().add('Magic logs', 1),
 		table: new LootTable().every('Raw bird meat', [1, 3]).tertiary(3, 'Feather', [10, 100]),
-		normalNestTable: new LootTable().tertiary(2, nestTable, [1, 8]),
-		strungRabbitFootTable: new LootTable().tertiary(2, strungRabbitFootNestTable, [1, 8]),
 		huntTechnique: 'bird house trapping',
 		waitTime: 50 * Time.Minute,
 		runTime: 81 * Time.Second,
-		qpRequired: 3
+		qpRequired: 3,
+		baseNestChance: 8.5
 	},
 	{
 		name: 'Redwood bird house',
@@ -170,12 +160,11 @@ const birdhouses: Birdhouse[] = [
 		houseItemReq: new Bank().add('Redwood bird house', 1),
 		craftItemReq: new Bank().add('Redwood logs', 1),
 		table: new LootTable().every('Raw bird meat', [1, 3]).tertiary(3, 'Feather', [10, 100]),
-		normalNestTable: new LootTable().tertiary(2, nestTable, [1, 9]),
-		strungRabbitFootTable: new LootTable().tertiary(2, strungRabbitFootNestTable, [1, 9]),
 		huntTechnique: 'bird house trapping',
 		waitTime: 50 * Time.Minute,
 		runTime: 81 * Time.Second,
-		qpRequired: 3
+		qpRequired: 3,
+		baseNestChance: 8.75
 	}
 ];
 

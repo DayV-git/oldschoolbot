@@ -22,12 +22,13 @@ export const sepulchreTask: MinionTask = {
 		let agilityXP = 0;
 		let thievingXP = 0;
 		let numCoffinsOpened = 0;
+		const lootTableOptions = { tertiaryItemPercentageChanges: user.buildTertiaryItemChanges() };
 
 		const highestCompletedFloor = completedFloors.reduce((prev, next) => (prev.number > next.number ? prev : next));
 		for (let i = 0; i < quantity; i++) {
 			for (const floor of completedFloors) {
 				if (floor.number === 5) {
-					loot.add(GrandHallowedCoffin.roll());
+					loot.add(GrandHallowedCoffin.roll(1, lootTableOptions));
 				}
 
 				const numCoffinsToOpen = 1;

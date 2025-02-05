@@ -2,13 +2,14 @@ import { calcPercentOfNum, calcWhatPercent, percentChance, randInt, roll } from 
 
 import type { LootBank } from '../../meta/types';
 import Bank from '../../structures/Bank';
-import LootTable from '../../structures/LootTable';
+import LootTable, { type LootTableRollOptions, tertiaryItemChanges } from '../../structures/LootTable';
 import SimpleTable from '../../structures/SimpleTable';
 import { resolveNameBank } from '../../util/bank';
 
 export interface TeamMember {
 	id: string;
 	damageDone: number;
+	eliteCA: boolean;
 }
 
 export interface NightmareOptions {
@@ -17,6 +18,7 @@ export interface NightmareOptions {
 	 */
 	team: TeamMember[];
 	isPhosani: boolean;
+	lootTableOptions?: LootTableRollOptions;
 }
 
 const data: Record<string, [number[], number]> = {
@@ -226,6 +228,11 @@ class NightmareClass {
 
 		// Hand out non-uniques
 		for (const teamMember of parsedTeam) {
+			const lootOptions = options.lootTableOptions ?? {
+				tertiaryItemPercentageChanges: tertiaryItemChanges(false, false, false, [
+					{ tier: 'elite', completed: teamMember.eliteCA }
+				])
+			};
 			if (lootResult[teamMember.id].length === 0) {
 				lootResult[teamMember.id].add(
 					...this.rollNonUniqueLoot(teamMember.scaledPercentDamage, teamMember.mvp, options.isPhosani)
@@ -233,7 +240,11 @@ class NightmareClass {
 			}
 			lootResult[teamMember.id].add(teamMember.mvp ? 'Big bones' : 'Bones');
 			lootResult[teamMember.id].add(
-				options.isPhosani ? phosaniTertiary.roll() : teamMember.mvp ? mvpTertiary.roll() : nonMvpTertiary.roll()
+				options.isPhosani
+					? phosaniTertiary.roll(1, lootOptions)
+					: teamMember.mvp
+						? mvpTertiary.roll(1, lootOptions)
+						: nonMvpTertiary.roll(1, lootOptions)
 			);
 		}
 

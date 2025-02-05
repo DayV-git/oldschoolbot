@@ -202,7 +202,8 @@ export async function barbAssaultGambleCommand(
 			high_gambles: true
 		}
 	);
-	const loot = new Bank().add(table.roll(quantity));
+	const lootTableOptions = { tertiaryItemPercentageChanges: user.buildTertiaryItemChanges() };
+	const loot = new Bank().add(table.roll(quantity, lootTableOptions));
 	let str = `You spent ${(cost * quantity).toLocaleString()} Honour Points for ${quantity.toLocaleString()}x ${name} Gamble, and received...`;
 	if (loot.has('Pet Penance Queen')) {
 		str += petMessage(loot);

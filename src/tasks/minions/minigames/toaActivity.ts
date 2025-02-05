@@ -100,7 +100,8 @@ export const toaTask: MinionTask = {
 						points: i.points,
 						cl: fullUser.cl,
 						kc: raidResults.get(i.id)!.kc,
-						deaths: i.deaths
+						deaths: i.deaths,
+						eliteCA: i.eliteCA
 					};
 				}),
 				raidLevel

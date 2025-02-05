@@ -25,7 +25,7 @@ export const nightmareTask: MinionTask = {
 		const team = method === 'solo' ? [user.id] : [user.id, '1', '2', '3'];
 
 		const [userStats] = await getNightmareGearStats(user, team, isPhosani);
-		const parsedUsers = team.map(id => ({ ...userStats, id }));
+		const parsedUsers = team.map(id => ({ ...userStats, id, eliteCA: user.hasCompletedCATier('elite') }));
 		const userLoot = new Bank();
 		let kc = 0;
 		let deaths = 0;
@@ -34,7 +34,8 @@ export const nightmareTask: MinionTask = {
 			const _loot = RawNightmare.kill({
 				team: parsedUsers.map(user => ({
 					id: user.id,
-					damageDone: team.length === 1 ? 2400 : randomVariation(user.damageDone, 5)
+					damageDone: team.length === 1 ? 2400 : randomVariation(user.damageDone, 5),
+					eliteCA: user.eliteCA
 				})),
 				isPhosani
 			});

@@ -1,7 +1,7 @@
 import { Bank } from 'oldschooljs';
-import { LootTable } from 'oldschooljs';
+import { LootTable, type LootTableRollOptions } from 'oldschooljs';
 
-const replaceItems = ['Fish barrel', 'Tackle box', 'Big harpoonfish'];
+const replaceItems = ['Fish barrel', 'Tackle box', 'Big harpoonfish', 'Tiny tempor'];
 
 const PoolCasketTable = new LootTable()
 	.add('Rune med helm', 1, 9)
@@ -50,9 +50,9 @@ const PoolCasketTable = new LootTable()
 	.add('Loop half of key', 9, 1)
 	.add('Tooth half of key', 9, 1)
 	.add('Coins', [25_000, 50_000], 1)
-	.add('Clue scroll (easy)', 1, 12)
-	.add('Clue scroll (medium)', 1, 7)
-	.add('Clue scroll (hard)', 1, 5);
+	.tertiary(20, 'Clue scroll (easy)')
+	.tertiary(33, 'Clue scroll (medium)')
+	.tertiary(50, 'Clue scroll (hard)');
 
 const fishTables = [
 	[
@@ -127,7 +127,12 @@ const fishTables = [
 	]
 ] as const;
 
-export function getTemporossLoot(quantity: number, fishingLevel: number, userBank: Bank) {
+export function getTemporossLoot(
+	quantity: number,
+	fishingLevel: number,
+	userBank: Bank,
+	lootTableOptions: LootTableRollOptions
+) {
 	const loot = new Bank();
 	const lootTable = new LootTable()
 		.add('Spirit flakes', [32, 64], 2000)
@@ -154,12 +159,13 @@ export function getTemporossLoot(quantity: number, fishingLevel: number, userBan
 	}
 
 	for (let index = 0; index < quantity; index++) {
-		const newItem = lootTable.roll();
-		if (replaceItems.includes(newItem.items()[0][0].name) && userBank.has(newItem)) {
-			loot.add('Soaked page', 25);
-		} else {
-			loot.add(newItem);
+		const newloot = lootTable.roll(1, lootTableOptions);
+		const replaceItem = replaceItems.find(i => i === newloot.items()[0][0].name);
+		if (replaceItem && userBank.has(replaceItem)) {
+			newloot.add('Soaked page', 25);
+			newloot.remove(replaceItem);
 		}
+		loot.add(newloot);
 	}
 
 	return loot;
