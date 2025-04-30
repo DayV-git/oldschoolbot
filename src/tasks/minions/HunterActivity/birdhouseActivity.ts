@@ -2,7 +2,6 @@ import type { Prisma } from '@prisma/client';
 import { percentChance } from 'e';
 import { Bank } from 'oldschooljs';
 
-import { ClueTiers } from '../../../lib/clues/clueTiers';
 import {
 	birdsNestID,
 	clueNestTable,
@@ -75,9 +74,9 @@ export const birdHouseTask: MinionTask = {
 			const seedNestChance = 0.8 * hunterLevel;
 			const nestChance = birdhouseToCollect.baseNestChance * (1 + Math.max(hunterLevel - 50, 0) / 49);
 			const lootTableOptions = { tertiaryItemPercentageChanges: user.buildTertiaryItemChanges() };
-			const allClues = ClueTiers.map(tier => tier.scrollID);
 
 			for (let i = 0; i < 4; i++) {
+				const clueLoot = new Bank();
 				loot.add(birdhouseToCollect.table.roll());
 				if (percentChance(seedNestChance)) {
 					loot.add(birdsNestID);
@@ -85,9 +84,16 @@ export const birdHouseTask: MinionTask = {
 				}
 				for (let j = 0; j < 10; j++) {
 					if (percentChance(nestChance)) {
-						if (!allClues.some(id => loot.has(id))) {
-							loot.add(clueNestTable.roll(1, lootTableOptions));
-						} else if (strungRabbitFoot) {
+						//First, try clue table
+						if (clueLoot.length === 0) {
+							clueNestTable.roll(1, { ...lootTableOptions, targetBank: clueLoot });
+							if (clueLoot.length > 0) {
+								loot.add(clueLoot);
+								continue;
+							}
+						}
+						// If we already had a clue, or clue roll was unsuccessful, roll nest table
+						if (strungRabbitFoot) {
 							loot.add(strungRabbitFootNestTable.roll());
 						} else {
 							loot.add(nestTable.roll());
