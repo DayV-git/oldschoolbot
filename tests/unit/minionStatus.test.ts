@@ -1,10 +1,10 @@
-import { describe, expect, it, vi } from 'vitest';
 import { MathRNG } from 'node-rng';
+import { describe, expect, it, vi } from 'vitest';
 
 import killableMonsters from '../../src/lib/minions/data/killableMonsters/index.js';
-import Mining from '../../src/lib/skilling/skills/mining.js';
 import { Farming } from '../../src/lib/skilling/skills/farming/index.js';
 import type { IPatchData } from '../../src/lib/skilling/skills/farming/utils/types.js';
+import Mining from '../../src/lib/skilling/skills/mining.js';
 import type { ActivityTaskData, FarmingActivityTaskOptions } from '../../src/lib/types/minions.js';
 import { minionStatus } from '../../src/lib/util/minionStatus.js';
 import { formatTripDuration } from '../../src/lib/util/minionUtils.js';
@@ -142,7 +142,9 @@ describe('minionStatus - core rendering paths', () => {
 
 		const result = minionStatus(user, task, rng, now);
 
-		expect(result).toContain(`approximately ${formatTripDuration(user, 15_000)} **to** ${formatTripDuration(user, 25_000)} remaining.`);
+		expect(result).toContain(
+			`approximately ${formatTripDuration(user, 15_000)} **to** ${formatTripDuration(user, 25_000)} remaining.`
+		);
 	});
 
 	it('uses the activity-specific duration formula for Fight Caves', () => {

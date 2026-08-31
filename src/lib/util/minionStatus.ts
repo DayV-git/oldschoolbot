@@ -1,4 +1,4 @@
-import { Emoji, increaseNumByPercent, reduceNumByPercent, toTitleCase } from '@oldschoolgg/toolkit';
+import { Emoji, toTitleCase } from '@oldschoolgg/toolkit';
 import { MathRNG } from 'node-rng';
 import { Items } from 'oldschooljs';
 
@@ -83,7 +83,7 @@ import type {
 	WoodcuttingActivityTaskOptions,
 	ZalcanoActivityTaskOptions
 } from '@/lib/types/minions.js';
-import { formatTripDuration } from '@/lib/util/minionUtils.js';
+import { formatEstimatedRemaining, formatSpecialTripDuration, formatTripDuration } from '@/lib/util/minionUtils.js';
 import { shades, shadesLogs } from '@/mahoji/lib/abstracted_commands/shadesOfMortonCommand.js';
 import { ValeTotemsDecorations } from '@/mahoji/lib/abstracted_commands/valeTotemsCommand.js';
 import { collectables } from '@/mahoji/lib/collectables.js';
@@ -176,13 +176,7 @@ export function minionStatus(user: MUser, currentTask: ActivityTaskData | null, 
 			return `${name} is currently mining ${ore?.name}. ${
 				data.fakeDurationMax === data.fakeDurationMin
 					? formattedDuration
-					: `approximately ${formatTripDuration(
-							user,
-							rng.randomVariation(reduceNumByPercent(durationRemaining, 25), 20)
-						)} **to** ${formatTripDuration(
-							user,
-							rng.randomVariation(increaseNumByPercent(durationRemaining, 25), 20)
-						)} remaining.`
+					: formatEstimatedRemaining(user, durationRemaining, rng)
 			} Your ${Emoji.Mining} Mining level is ${user.skillsAsLevels.mining}`;
 		}
 
@@ -192,13 +186,7 @@ export function minionStatus(user: MUser, currentTask: ActivityTaskData | null, 
 			return `${name} is currently mining at the Motherlode Mine. ${
 				data.fakeDurationMax === data.fakeDurationMin
 					? formattedDuration
-					: `approximately ${formatTripDuration(
-							user,
-							rng.randomVariation(reduceNumByPercent(durationRemaining, 25), 20)
-						)} **to** ${formatTripDuration(
-							user,
-							rng.randomVariation(increaseNumByPercent(durationRemaining, 25), 20)
-						)} remaining.`
+					: formatEstimatedRemaining(user, durationRemaining, rng)
 			} Your ${Emoji.Mining} Mining level is ${user.skillsAsLevels.mining}`;
 		}
 
@@ -274,13 +262,7 @@ export function minionStatus(user: MUser, currentTask: ActivityTaskData | null, 
 			return `${name} is currently chopping ${log?.name}. ${
 				data.fakeDurationMax === data.fakeDurationMin
 					? formattedDuration
-					: `approximately ${formatTripDuration(
-							user,
-							rng.randomVariation(reduceNumByPercent(durationRemaining, 25), 20)
-						)} **to** ${formatTripDuration(
-							user,
-							rng.randomVariation(increaseNumByPercent(durationRemaining, 25), 20)
-						)} remaining.`
+					: formatEstimatedRemaining(user, durationRemaining, rng)
 			} Your ${Emoji.Woodcutting} Woodcutting level is ${user.skillsAsLevels.woodcutting}`;
 		}
 		case 'Runecraft': {
@@ -304,10 +286,9 @@ export function minionStatus(user: MUser, currentTask: ActivityTaskData | null, 
 
 		case 'FightCaves': {
 			const data = currentTask as FightCavesActivityTaskOptions;
-			const durationRemaining = data.finishDate - data.duration + data.fakeDuration - now;
 			return `${name} is currently attempting the ${Emoji.AnimatedFireCape} **Fight caves** ${
 				Emoji.TzRekJad
-			}. If they're successful and don't die, the trip should take ${formatTripDuration(user, durationRemaining)}.`;
+			}. If they're successful and don't die, the trip should take ${formatSpecialTripDuration(user, data, now)}.`;
 		}
 		case 'TitheFarm': {
 			return `${name} is currently farming at the **Tithe Farm**. ${formattedDuration}`;
@@ -623,20 +604,12 @@ export function minionStatus(user: MUser, currentTask: ActivityTaskData | null, 
 		}
 		case 'Inferno': {
 			const data = currentTask as InfernoOptions;
-			const durationRemaining = data.finishDate - data.duration + data.fakeDuration - now;
-			return `${name} is currently attempting the Inferno, if they're successful and don't die, the trip should take ${formatTripDuration(
-				user,
-				durationRemaining
-			)}.`;
+			return `${name} is currently attempting the Inferno, if they're successful and don't die, the trip should take ${formatSpecialTripDuration(user, data, now)}.`;
 		}
 		case 'TheatreOfBlood': {
 			const data = currentTask as TheatreOfBloodTaskOptions;
-			const durationRemaining = data.finishDate - data.duration + data.fakeDuration - now;
 
-			return `${name} is currently attempting the Theatre of Blood, if your team is successful and doesn't die, the trip should take ${formatTripDuration(
-				user,
-				durationRemaining
-			)}.`;
+			return `${name} is currently attempting the Theatre of Blood, if your team is successful and doesn't die, the trip should take ${formatSpecialTripDuration(user, data, now)}.`;
 		}
 		case 'LastManStanding': {
 			const data = currentTask as MinigameActivityTaskOptionsWithNoChanges;
@@ -669,10 +642,9 @@ export function minionStatus(user: MUser, currentTask: ActivityTaskData | null, 
 		}
 		case 'Nex': {
 			const data = currentTask as NexTaskOptions;
-			const durationRemaining = data.finishDate - data.duration + data.fakeDuration - now;
 			return `${name} is currently killing Nex ${data.quantity} times with a team of ${
 				data.teamDetails.length
-			}. The trip should take ${formatTripDuration(user, durationRemaining)}.`;
+			}. The trip should take ${formatSpecialTripDuration(user, data, now)}.`;
 		}
 		case 'TroubleBrewing': {
 			const data = currentTask as MinigameActivityTaskOptionsWithNoChanges;
@@ -740,12 +712,8 @@ export function minionStatus(user: MUser, currentTask: ActivityTaskData | null, 
 		}
 		case 'TombsOfAmascut': {
 			const data = currentTask as TOAOptions;
-			const durationRemaining = data.finishDate - data.duration + data.fakeDuration - now;
 
-			return `${name} is currently attempting the Tombs of Amascut, if your team is successful and doesn't die, the trip should take ${formatTripDuration(
-				user,
-				durationRemaining
-			)}.`;
+			return `${name} is currently attempting the Tombs of Amascut, if your team is successful and doesn't die, the trip should take ${formatSpecialTripDuration(user, data, now)}.`;
 		}
 		case 'UnderwaterAgilityThieving': {
 			return `${name} is currently doing Underwater Agility and Thieving. ${formattedDuration}`;

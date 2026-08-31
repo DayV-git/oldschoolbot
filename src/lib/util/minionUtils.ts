@@ -1,4 +1,5 @@
-import { formatDurationWithTimestamp, Time } from '@oldschoolgg/toolkit';
+import { formatDurationWithTimestamp, increaseNumByPercent, reduceNumByPercent, Time } from '@oldschoolgg/toolkit';
+import { MathRNG } from 'node-rng';
 import type { Bank } from 'oldschooljs';
 
 import { BitField } from '@/lib/constants.js';
@@ -9,6 +10,24 @@ export function formatTripDuration(user: MUser, durationMs: number): string {
 	const showTimestamp = user.bitfield.includes(BitField.DisableDynamicTimestamp);
 
 	return formatDurationWithTimestamp(durationMs, user.perkTier, showTimestamp);
+}
+
+export function formatEstimatedRemaining(user: MUser, durationRemaining: number, rng = MathRNG): string {
+	return `approximately ${formatTripDuration(
+		user,
+		rng.randomVariation(reduceNumByPercent(durationRemaining, 25), 20)
+	)} **to** ${formatTripDuration(
+		user,
+		rng.randomVariation(increaseNumByPercent(durationRemaining, 25), 20)
+	)} remaining.`;
+}
+
+export function formatSpecialTripDuration(
+	user: MUser,
+	task: { duration: number; fakeDuration: number; finishDate: number },
+	now: number
+): string {
+	return formatTripDuration(user, task.finishDate - task.duration + task.fakeDuration - now);
 }
 
 const MOON_KEY_ONE_IN_PER_MINUTE = 60;
