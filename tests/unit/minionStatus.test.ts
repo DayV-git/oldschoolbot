@@ -151,13 +151,13 @@ describe('minionStatus - core rendering paths', () => {
 		const user = mockMUser({ id: 'fight-caves-user' });
 		const task = {
 			type: 'FightCaves',
-			finishDate: now + 70_000,
-			duration: 60_000,
-			fakeDuration: 10_000
+			finishDate: now + 10_000,
+			duration: 10_000,
+			fakeDuration: 60_000
 		} as unknown as ActivityTaskData;
 
 		expect(minionStatus(user, task, MathRNG, now)).toContain(
-			`the trip should take ${formatTripDuration(user, 20_000)}.`
+			`the trip should take ${formatTripDuration(user, 60_000)}.`
 		);
 	});
 
