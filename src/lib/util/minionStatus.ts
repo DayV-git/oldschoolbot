@@ -88,13 +88,13 @@ import { shades, shadesLogs } from '@/mahoji/lib/abstracted_commands/shadesOfMor
 import { ValeTotemsDecorations } from '@/mahoji/lib/abstracted_commands/valeTotemsCommand.js';
 import { collectables } from '@/mahoji/lib/collectables.js';
 
-export function minionStatus(user: MUser, currentTask: ActivityTaskData | null, rng = MathRNG) {
+export function minionStatus(user: MUser, currentTask: ActivityTaskData | null, rng = MathRNG, now = Date.now()) {
 	const name = user.minionName;
 	if (!currentTask) {
 		return `${name} is currently doing nothing.`;
 	}
 
-	const durationRemaining = currentTask.finishDate - Date.now();
+	const durationRemaining = currentTask.finishDate - now;
 	const loneFormattedDuration = `${formatTripDuration(user, durationRemaining)}`;
 	const formattedDuration = `${loneFormattedDuration} remaining.`;
 
@@ -304,7 +304,7 @@ export function minionStatus(user: MUser, currentTask: ActivityTaskData | null, 
 
 		case 'FightCaves': {
 			const data = currentTask as FightCavesActivityTaskOptions;
-			const durationRemaining = data.finishDate - data.duration + data.fakeDuration - Date.now();
+			const durationRemaining = data.finishDate - data.duration + data.fakeDuration - now;
 			return `${name} is currently attempting the ${Emoji.AnimatedFireCape} **Fight caves** ${
 				Emoji.TzRekJad
 			}. If they're successful and don't die, the trip should take ${formatTripDuration(user, durationRemaining)}.`;
@@ -623,7 +623,7 @@ export function minionStatus(user: MUser, currentTask: ActivityTaskData | null, 
 		}
 		case 'Inferno': {
 			const data = currentTask as InfernoOptions;
-			const durationRemaining = data.finishDate - data.duration + data.fakeDuration - Date.now();
+			const durationRemaining = data.finishDate - data.duration + data.fakeDuration - now;
 			return `${name} is currently attempting the Inferno, if they're successful and don't die, the trip should take ${formatTripDuration(
 				user,
 				durationRemaining
@@ -631,7 +631,7 @@ export function minionStatus(user: MUser, currentTask: ActivityTaskData | null, 
 		}
 		case 'TheatreOfBlood': {
 			const data = currentTask as TheatreOfBloodTaskOptions;
-			const durationRemaining = data.finishDate - data.duration + data.fakeDuration - Date.now();
+			const durationRemaining = data.finishDate - data.duration + data.fakeDuration - now;
 
 			return `${name} is currently attempting the Theatre of Blood, if your team is successful and doesn't die, the trip should take ${formatTripDuration(
 				user,
@@ -669,7 +669,7 @@ export function minionStatus(user: MUser, currentTask: ActivityTaskData | null, 
 		}
 		case 'Nex': {
 			const data = currentTask as NexTaskOptions;
-			const durationRemaining = data.finishDate - data.duration + data.fakeDuration - Date.now();
+			const durationRemaining = data.finishDate - data.duration + data.fakeDuration - now;
 			return `${name} is currently killing Nex ${data.quantity} times with a team of ${
 				data.teamDetails.length
 			}. The trip should take ${formatTripDuration(user, durationRemaining)}.`;
@@ -740,7 +740,7 @@ export function minionStatus(user: MUser, currentTask: ActivityTaskData | null, 
 		}
 		case 'TombsOfAmascut': {
 			const data = currentTask as TOAOptions;
-			const durationRemaining = data.finishDate - data.duration + data.fakeDuration - Date.now();
+			const durationRemaining = data.finishDate - data.duration + data.fakeDuration - now;
 
 			return `${name} is currently attempting the Tombs of Amascut, if your team is successful and doesn't die, the trip should take ${formatTripDuration(
 				user,
